@@ -14,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body className="bg-emerald-50/40 text-slate-900">
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,8 +1,9 @@
+// app/[lang]/layout.tsx
 import type { ReactNode } from 'react';
 import type { Lang } from '@/lib/types';
-import { getTranslations } from '@/lib/i18n';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { getTranslations } from '@/lib/i18n';
 
 type Props = {
   children: ReactNode;
@@ -16,12 +17,17 @@ export default function LangLayout({ children, params }: Props) {
   const t = getTranslations(lang);
 
   return (
-    <html lang={lang}>
-      <body className="bg-emerald-50/40 text-slate-900">
-        <Navbar lang={lang} />
-        <main className="pt-16 md:pt-20">{children}</main>
-        <Footer t={t.footer} />
-      </body>
-    </html>
+    <>
+      {/* Header global */}
+      <Navbar lang={lang} />
+
+      {/* Konten halaman (hero, calculators, dll) */}
+      <main className="min-h-screen pt-16 md:pt-20">
+        {children}
+      </main>
+
+      {/* Footer global, pakai translation sesuai lang */}
+      <Footer t={t.footer} />
+    </>
   );
 }
