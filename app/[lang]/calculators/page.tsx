@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container } from '@/components/layout/Container';
 import { Button } from '@/components/ui/Button';
+import { buildLangHref } from '@/lib/utils'; 
+import { Lang } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Daftar Kalkulator Pajak | CekPajak',
@@ -67,9 +69,15 @@ const calculators: CalculatorItem[] = [
   },
 ];
 
-export default function CalculatorsPage() {
+type PageProps = {
+  params: {
+    lang: Lang;
+  };
+};
+
+export default function CalculatorsPage({ params }: PageProps) {
   return (
-    <main className="bg-emerald-50/40 pb-16 pt-20 md:pb-20 md:pt-24">
+    <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-emerald-50/40 to-slate-50">
       <Container>
         {/* Header */}
         <header className="mb-8 md:mb-10">
@@ -136,7 +144,7 @@ export default function CalculatorsPage() {
                 {/* CTA */}
                 <div className="mt-4 flex items-center justify-between pt-1">
                   {isLive && calc.href ? (
-                    <Link href={calc.href}>
+                    <Link href={buildLangHref(params.lang, calc.href)}>
                       <Button variant="primary" size="sm">
                         Buka Kalkulator
                       </Button>

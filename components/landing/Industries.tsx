@@ -1,11 +1,13 @@
 // components/landing/Industries.tsx
 import type { Translations } from '@/lib/i18n';
+import type { Lang } from '@/lib/types';
 
 type Props = {
   t: Translations['industries'];
+  lang: Lang;
 };
 
-export function Industries({ t }: Props) {
+export function Industries({ t, lang }: Props) {
   return (
     <section className="bg-white py-12 md:py-16">
       <div className="mx-auto max-w-6xl px-4">

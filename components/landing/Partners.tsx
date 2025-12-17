@@ -1,11 +1,13 @@
 // components/landing/Partners.tsx
 import type { Translations } from '@/lib/i18n';
+import type { Lang } from '@/lib/types';
 
 type Props = {
   t: Translations['partners'];
+  lang: Lang;
 };
 
-export function Partners({ t }: Props) {
+export function Partners({ t, lang }: Props) {
   return (
     <section id="tentang" className="bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4">

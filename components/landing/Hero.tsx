@@ -1,12 +1,16 @@
+// components/landing/Hero.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Translations } from '@/lib/i18n';
+import type { Lang } from '@/lib/types';
+import { buildLangHref } from '@/lib/utils'; 
 import { Button } from '@/components/ui/Button';
 
 type Props = {
   t: Translations['hero'];
+  lang: Lang;
 };
 
 type Promo = {
@@ -16,7 +20,7 @@ type Promo = {
   href?: string;
 };
 
-export function Hero({ t }: Props) {
+export function Hero({ t, lang }: Props) {
   const promos: Promo[] = (t as any).promos ?? [
     {
       badge: 'Promo Akhir Tahun',
@@ -82,7 +86,7 @@ export function Hero({ t }: Props) {
             <div className="mt-2 flex items-center justify-between gap-3 md:mt-0 md:justify-end">
               {activePromo.href && (
                 <Link
-                  href={activePromo.href}
+                  href={buildLangHref(lang, activePromo.href)}  
                   className="text-xs font-semibold underline-offset-2 hover:underline"
                 >
                   Lihat detail
@@ -134,57 +138,6 @@ export function Hero({ t }: Props) {
 
         <div className="relative z-[1] flex flex-col-reverse gap-8 md:grid md:grid-cols-[minmax(0,3fr)_minmax(0,2.5fr)] md:items-center">
           {/* Kartu SPT kanan */}
-          <div className="flex justify-center md:justify-end">
-            <div className="relative w-full max-w-sm md:max-w-md">
-              {/* layer hijau di belakang */}
-              <div className="pointer-events-none absolute inset-0 translate-x-4 translate-y-4 rounded-3xl bg-emerald-600/70 blur-[2px]" />
-
-              {/* kartu utama */}
-              <div className="relative overflow-hidden rounded-3xl bg-white p-5 shadow-lg shadow-emerald-100 ring-1 ring-emerald-50 md:p-6">
-                <div className="mb-3 flex items-center justify-between text-xs text-slate-500">
-                  <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-                      SPT Tahunan
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      Klien individu · 2024
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700">
-                    Proses 2–3 Hari
-                  </span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                    <span className="text-slate-500">Status</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-                      ✓ Terlapor
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                    <span className="text-slate-500">Tanggal Lapor</span>
-                    <span className="text-[11px] font-medium text-slate-900">
-                      15 Maret 2024
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                    <span className="text-slate-500">Penghematan Pajak</span>
-                    <span className="text-[11px] font-semibold text-emerald-700">
-                      Rp 5,7 Juta
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
-                    100% Online & Offline
-                  </span>
-                  <span>Tanpa denda telat lapor</span>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Teks kiri */}
           <div className="space-y-4 text-center md:text-left">
@@ -210,14 +163,12 @@ export function Hero({ t }: Props) {
 
             {/* CTA */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-1 md:justify-start">
-              {/* Primary → /request */}
-              <Link href="/request">
+              <Link href={buildLangHref(lang, '/request')}>
                 <Button variant="primary" size="md">
                   {t.primaryCta}
                 </Button>
               </Link>
 
-              {/* Secondary → scroll ke layanan */}
               <Button
                 type="button"
                 variant="secondary"
@@ -246,7 +197,7 @@ export function Hero({ t }: Props) {
                   Cocok untuk cek cepat kewajiban pajak sebelum konsultasi.
                 </span>
               </div>
-              <Link href="/calculators">
+              <Link href={buildLangHref(lang, `/calculators`)}>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -258,31 +209,6 @@ export function Hero({ t }: Props) {
             </div>
 
             {/* Rating & “dipercaya” */}
-            <div className="flex flex-col gap-2 pt-1 text-xs text-slate-600 md:flex-row md:items-center md:gap-4">
-              <div className="flex items-center justify-center gap-2 md:justify-start">
-                <div className="flex -space-x-2">
-                  {Array.from({ length: 4 }).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="h-7 w-7 rounded-full bg-emerald-500/80"
-                    />
-                  ))}
-                </div>
-                <div>
-                  <div className="font-semibold text-slate-900">
-                    {t.ratingMain}
-                  </div>
-                  <div className="text-[11px] text-amber-500">★★★★★</div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 md:justify-start">
-                <span className="h-px w-8 bg-emerald-200 md:w-10" />
-                <span className="text-[11px] text-slate-500">
-                  Dipercaya klien individu & bisnis di berbagai kota.
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

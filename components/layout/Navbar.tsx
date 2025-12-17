@@ -8,14 +8,12 @@ import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 type Props = {
   lang: Lang;
-  onChangeLang: (lang: Lang) => void;
 };
 
-export function Navbar({ lang, onChangeLang }: Props) {
+export function Navbar({ lang }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
-  // efek transparan di atas, putih saat scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -33,10 +31,9 @@ export function Navbar({ lang, onChangeLang }: Props) {
         scrolled ? 'bg-white/90 shadow-sm backdrop-blur' : 'bg-transparent'
       )}
     >
-      {/* bar utama */}
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/id" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-semibold text-emerald-50 shadow-lg shadow-emerald-500/40">
             CP
           </div>
@@ -72,26 +69,27 @@ export function Navbar({ lang, onChangeLang }: Props) {
             FAQ
           </Link>
 
-          <LanguageSwitcher lang={lang} onChange={onChangeLang} />
+          {/* ✅ cukup kirim lang, nggak usah onChange */}
+          <LanguageSwitcher lang={lang} />
 
           <Link
-            href="/request"
+            href={`/${lang}/request`}
             className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
           >
             Konsultasi Gratis
           </Link>
 
           <Link
-            href="/calculators/pph21"
+            href={`/${lang}/calculators/pph21-ter`}
             className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
           >
             Coba Calculator
           </Link>
         </div>
 
-        {/* Aksi mobile: switch bahasa + hamburger */}
+        {/* Mobile: language switch + hamburger */}
         <div className="flex items-center gap-2 md:hidden">
-          <LanguageSwitcher lang={lang} onChange={onChangeLang} />
+          <LanguageSwitcher lang={lang} />
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-100 bg-white/80 text-slate-900 shadow-sm"
@@ -156,7 +154,7 @@ export function Navbar({ lang, onChangeLang }: Props) {
             </Link>
 
             <Link
-              href="/request"
+              href={`/${lang}/request`}
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
             >
@@ -164,7 +162,7 @@ export function Navbar({ lang, onChangeLang }: Props) {
             </Link>
 
             <Link
-              href="/calculators/pph21"
+              href={`/${lang}/calculators/pph21-ter`}
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
             >

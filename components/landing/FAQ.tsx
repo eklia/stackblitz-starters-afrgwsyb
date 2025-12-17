@@ -5,12 +5,14 @@ import { useState } from 'react';
 import { Container } from '@/components/layout/Container';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { cn } from '@/lib/utils';
+import type { Lang } from '@/lib/types';
 
 type Props = {
   t: any; // longgar supaya cocok dengan struktur i18n kamu
+  lang: Lang;
 };
 
-export function FAQ({ t }: Props) {
+export function FAQ({ t, lang }: Props) {
   const items: any[] = t?.items ?? t?.questions ?? t?.faqs ?? [];
 
   return (

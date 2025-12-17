@@ -1,14 +1,16 @@
 // components/landing/WhyChoose.tsx
 import type { Translations } from '@/lib/i18n';
+import type { Lang } from '@/lib/types';
 import { Container } from '@/components/layout/Container';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { cn } from '@/lib/utils';
 
 type Props = {
   t: Translations['whyChoose'];
+  lang: Lang;
 };
 
-export function WhyChoose({ t }: Props) {
+export function WhyChoose({ t, lang }: Props) {
   return (
     <section id="tentang" className="bg-white py-12 md:py-16">
       <Container>

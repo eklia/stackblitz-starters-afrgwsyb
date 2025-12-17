@@ -2,12 +2,19 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { RequestForm } from '@/components/request/RequestForm';
+import { Lang } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Konsultasi Pajak | CekPajak',
 };
 
-export default function RequestPage() {
+type PageProps = {
+  params: {
+    lang: Lang;
+  };
+};
+
+export default function RequestPage({ params }: PageProps)  {
   return (
     <main className="bg-emerald-50/40 pb-12 pt-20 md:pb-16 md:pt-24">
       <Container>

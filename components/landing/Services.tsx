@@ -1,6 +1,8 @@
 // components/landing/Services.tsx
 import Link from 'next/link';
 import type { Translations } from '@/lib/i18n';
+import type { Lang } from '@/lib/types';
+import { buildLangHref } from '@/lib/utils'; 
 import { Container } from '@/components/layout/Container';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Button } from '@/components/ui/Button';
@@ -8,11 +10,12 @@ import { cn } from '@/lib/utils';
 
 type Props = {
   t: Translations['services'];
+  lang: Lang;
 };
 
 type ServiceItem = Translations['services']['items'][number];
 
-export function Services({ t }: Props) {
+export function Services({ t, lang }: Props) {
   return (
     <section id="layanan" className="bg-emerald-50/40 py-12 md:py-16">
       <Container>
@@ -27,7 +30,7 @@ export function Services({ t }: Props) {
           />
 
           <Link
-            href="/calculators"
+            href={buildLangHref(lang, '/calculators')}
             className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
           >
             Lihat semua kalkulator
@@ -38,7 +41,7 @@ export function Services({ t }: Props) {
         {/* List layanan */}
         <div className="space-y-10 md:space-y-14">
           {t.items.map((item, index) => (
-            <ServiceBlock key={index} item={item} index={index} />
+            <ServiceBlock key={index} item={item} index={index} lang={lang}/>
           ))}
         </div>
       </Container>
@@ -49,9 +52,10 @@ export function Services({ t }: Props) {
 type BlockProps = {
   item: ServiceItem;
   index: number;
+  lang: Lang;
 };
 
-function ServiceBlock({ item, index }: BlockProps) {
+function ServiceBlock({ item, index, lang}: BlockProps) {
   const isReversedOnDesktop = index === 1; // layanan tengah dibalik
 
   // mapping index -> key service
@@ -106,7 +110,7 @@ function ServiceBlock({ item, index }: BlockProps) {
           )}
 
           {item.ctaLabel && (
-            <Link href={`/request?service=${serviceKey}`}>
+            <Link href={buildLangHref(lang, `/request?service=${serviceKey}`)}>
               <Button
                 type="button"
                 variant="secondary"

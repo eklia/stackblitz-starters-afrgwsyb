@@ -1,12 +1,14 @@
 // components/landing/StatsBar.tsx
 import type { Translations } from '@/lib/i18n';
+import type { Lang } from '@/lib/types';
 import { Container } from '@/components/layout/Container';
 
 type Props = {
   t: Translations['stats'];
+  lang: Lang;
 };
 
-export function StatsBar({ t }: Props) {
+export function StatsBar({ t, lang }: Props) {
   return (
     <section className="bg-emerald-700 py-4 md:py-5">
       <Container>

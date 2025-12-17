@@ -2,12 +2,14 @@
 import { Container } from '@/components/layout/Container';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { cn } from '@/lib/utils';
+import type { Lang } from '@/lib/types';
 
 type Props = {
   t: any; // longgar dulu, supaya tidak bentrok dengan bentuk i18n
+  lang: Lang;
 };
 
-export function Testimonials({ t }: Props) {
+export function Testimonials({ t, lang }: Props) {
   const items: any[] = t?.items ?? t?.cards ?? [];
 
   return (
