@@ -13,6 +13,7 @@ import type {
 import { computePph21Ter } from '@/lib/tax/pph21-ter';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
+import type { Lang } from '@/lib/types';
 
 // ====== FORM STATE TYPE ======
 type FormState = {
@@ -72,19 +73,23 @@ function parseNumber(value: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-// 👉 helper baru: format input ke "1.500.000" dst
+// 👉 helper: format input ke "1.500.000" dst
 function formatCurrencyInput(value: string): string {
-  // ambil hanya digit
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
-  // tambahkan titik tiap 3 digit dari belakang
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 const MAX_INPUT_STEP = 5;
 const MAX_STEP = 6;
 
-export function Pph21TerCalculator() {
+type Props = {
+  lang: Lang;
+};
+
+export function Pph21TerCalculator({ lang }: Props) {
+  const isEn = lang === 'en';
+
   const [form, setForm] = useState<FormState>(initialForm);
   const [step, setStep] = useState<number>(1);
   const [result, setResult] = useState<Pph21TerResult | null>(null);
@@ -122,27 +127,44 @@ export function Pph21TerCalculator() {
   function validateStep(currentStep: number): string | null {
     switch (currentStep) {
       case 1:
-        if (!form.nama.trim()) return 'Nama pegawai wajib diisi pada Step 1.';
-        if (!form.jenisKelamin) return 'Jenis kelamin wajib dipilih.';
+        if (!form.nama.trim())
+          return isEn
+            ? 'Employee name is required in Step 1.'
+            : 'Nama pegawai wajib diisi pada Step 1.';
+        if (!form.jenisKelamin)
+          return isEn
+            ? 'Gender must be selected.'
+            : 'Jenis kelamin wajib dipilih.';
         return null;
       case 2:
-        if (!form.statusPtkp) return 'Status PTKP wajib dipilih.';
+        if (!form.statusPtkp)
+          return isEn ? 'PTKP status must be selected.' : 'Status PTKP wajib dipilih.';
         if (!form.hasNpwp)
-          return 'Harap pilih apakah pegawai memiliki NPWP atau tidak.';
+          return isEn
+            ? 'Please specify whether the employee has a TIN (NPWP).'
+            : 'Harap pilih apakah pegawai memiliki NPWP atau tidak.';
         return null;
       case 3:
         if (!form.jenisPerhitungan)
-          return 'Jenis perhitungan pajak wajib dipilih.';
+          return isEn
+            ? 'You must select the tax calculation type.'
+            : 'Jenis perhitungan pajak wajib dipilih.';
 
         if (form.jenisPerhitungan === 'BULANAN' && !form.bulan)
-          return 'Bulan penghasilan wajib dipilih untuk perhitungan bulanan.';
+          return isEn
+            ? 'Month of income is required for monthly calculation.'
+            : 'Bulan penghasilan wajib dipilih untuk perhitungan bulanan.';
 
         if (form.jenisPerhitungan === 'TAHUNAN' && !form.masaKerjaSetahun)
-          return 'Masa penghasilan dalam setahun wajib diisi untuk perhitungan tahunan.';
+          return isEn
+            ? 'Number of income months in the year is required for annual calculation.'
+            : 'Masa penghasilan dalam setahun wajib diisi untuk perhitungan tahunan.';
         return null;
       case 4:
         if (!form.gajiPokok || parseNumber(form.gajiPokok) <= 0)
-          return 'Gaji pokok bulanan wajib diisi.';
+          return isEn
+            ? 'Monthly base salary is required.'
+            : 'Gaji pokok bulanan wajib diisi.';
         return null;
       case 5:
         return null; // potongan boleh kosong
@@ -187,11 +209,19 @@ export function Pph21TerCalculator() {
     }
 
     if (!form.jenisPerhitungan) {
-      setError('Jenis perhitungan pajak wajib dipilih.');
+      setError(
+        isEn
+          ? 'Tax calculation type is required.'
+          : 'Jenis perhitungan pajak wajib dipilih.'
+      );
       return;
     }
     if (form.jenisPerhitungan === 'BULANAN' && !form.bulan) {
-      setError('Bulan penghasilan wajib dipilih.');
+      setError(
+        isEn
+          ? 'Month of income is required.'
+          : 'Bulan penghasilan wajib dipilih.'
+      );
       return;
     }
 
@@ -234,7 +264,9 @@ export function Pph21TerCalculator() {
     } catch (err) {
       console.error(err);
       setError(
-        'Terjadi kesalahan saat menghitung PPh21. Coba cek kembali input Anda.'
+        isEn
+          ? 'An error occurred while calculating PPh21. Please review your inputs.'
+          : 'Terjadi kesalahan saat menghitung PPh21. Coba cek kembali input Anda.'
       );
     } finally {
       setIsSubmitting(false);
@@ -249,24 +281,39 @@ export function Pph21TerCalculator() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100">
-              Kalkulator PPh21
+              {isEn ? 'PPh21 Calculator' : 'Kalkulator PPh21'}
             </p>
             <h1 className="mt-1 text-lg font-semibold md:text-2xl">
-              Simulasi PPh21 Pegawai Tetap (TER & Tahunan)
+              {isEn
+                ? 'PPh21 Simulation for Permanent Employees (TER & Annual)'
+                : 'Simulasi PPh21 Pegawai Tetap (TER & Tahunan)'}
             </h1>
-            <p className="mt-1 text-xs md:text-sm text-emerald-50/90">
-              Isi data per step. Setelah Step {MAX_INPUT_STEP}, klik{' '}
-              <span className="font-semibold">Hitung PPh21</span> untuk pindah
-              ke section hasil perhitungan.
+            <p className="mt-1 text-xs text-emerald-50/90 md:text-sm">
+              {isEn ? (
+                <>
+                  Fill in the data step by step. After Step {MAX_INPUT_STEP},{' '}
+                  click <span className="font-semibold">Calculate PPh21</span>{' '}
+                  to open the result section.
+                </>
+              ) : (
+                <>
+                  Isi data per step. Setelah Step {MAX_INPUT_STEP}, klik{' '}
+                  <span className="font-semibold">Hitung PPh21</span> untuk
+                  pindah ke section hasil perhitungan.
+                </>
+              )}
             </p>
           </div>
           <div className="flex flex-col items-start gap-1 text-xs md:items-end">
             <span className="inline-flex items-center rounded-full bg-emerald-700/60 px-3 py-1">
               <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-200" />
-              Versi simulasi — bukan pengganti review konsultan pajak
+              {isEn
+                ? 'Simulation version — not a substitute for professional tax review'
+                : 'Versi simulasi — bukan pengganti review konsultan pajak'}
             </span>
             <span className="text-emerald-100/80">
-              Langkah {step} dari {MAX_STEP}
+              {isEn ? 'Step' : 'Langkah'} {step} {isEn ? 'of' : 'dari'}{' '}
+              {MAX_STEP}
             </span>
           </div>
         </div>
@@ -283,23 +330,35 @@ export function Pph21TerCalculator() {
           {step === 1 && (
             <SectionCard
               step={step}
-              title="Identitas Pegawai"
-              description="Data dasar pegawai yang digunakan untuk perhitungan PPh21."
+              title={
+                isEn ? 'Employee Identity' : 'Identitas Pegawai'
+              }
+              description={
+                isEn
+                  ? 'Basic employee data used for PPh21 calculation.'
+                  : 'Data dasar pegawai yang digunakan untuk perhitungan PPh21.'
+              }
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <Label required>Nama Pegawai</Label>
+                  <Label required>
+                    {isEn ? 'Employee Name' : 'Nama Pegawai'}
+                  </Label>
                   <input
                     type="text"
                     value={form.nama}
                     onChange={(e) => handleChange('nama', e.target.value)}
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Contoh: Budi Santoso"
+                    placeholder={
+                      isEn ? 'Example: Budi Santoso' : 'Contoh: Budi Santoso'
+                    }
                     required
                   />
                 </div>
                 <div>
-                  <Label required>Jenis Kelamin</Label>
+                  <Label required>
+                    {isEn ? 'Gender' : 'Jenis Kelamin'}
+                  </Label>
                   <select
                     value={form.jenisKelamin}
                     onChange={(e) =>
@@ -308,9 +367,15 @@ export function Pph21TerCalculator() {
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                     required
                   >
-                    <option value="">Pilih jenis kelamin</option>
-                    <option value="L">Laki-laki</option>
-                    <option value="P">Perempuan</option>
+                    <option value="">
+                      {isEn ? 'Select gender' : 'Pilih jenis kelamin'}
+                    </option>
+                    <option value="L">
+                      {isEn ? 'Male' : 'Laki-laki'}
+                    </option>
+                    <option value="P">
+                      {isEn ? 'Female' : 'Perempuan'}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -321,19 +386,31 @@ export function Pph21TerCalculator() {
           {step === 2 && (
             <SectionCard
               step={step}
-              title="Status Perpajakan Pegawai"
-              description="Status PTKP dan kepemilikan NPWP akan mempengaruhi perhitungan pajak."
+              title={
+                isEn
+                  ? 'Employee Tax Status'
+                  : 'Status Perpajakan Pegawai'
+              }
+              description={
+                isEn
+                  ? 'PTKP status and NPWP ownership will affect the tax calculation.'
+                  : 'Status PTKP dan kepemilikan NPWP akan mempengaruhi perhitungan pajak.'
+              }
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label required>Status PTKP</Label>
+                  <Label required>
+                    {isEn ? 'PTKP Status' : 'Status PTKP'}
+                  </Label>
                   <select
                     value={form.statusPtkp}
                     onChange={(e) => handleChange('statusPtkp', e.target.value)}
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                     required
                   >
-                    <option value="">Pilih status PTKP</option>
+                    <option value="">
+                      {isEn ? 'Select PTKP status' : 'Pilih status PTKP'}
+                    </option>
                     <option value="TK/0">TK/0</option>
                     <option value="TK/1">TK/1</option>
                     <option value="TK/2">TK/2</option>
@@ -346,7 +423,9 @@ export function Pph21TerCalculator() {
                 </div>
 
                 <div>
-                  <Label required>Memiliki NPWP?</Label>
+                  <Label required>
+                    {isEn ? 'Has NPWP?' : 'Memiliki NPWP?'}
+                  </Label>
                   <div className="mt-1 flex gap-3">
                     {['YA', 'TIDAK'].map((opt) => (
                       <button
@@ -360,13 +439,20 @@ export function Pph21TerCalculator() {
                             : 'border-slate-200 text-slate-700 hover:border-emerald-300'
                         )}
                       >
-                        {opt === 'YA' ? 'Ya, punya NPWP' : 'Belum punya NPWP'}
+                        {opt === 'YA'
+                          ? isEn
+                            ? 'Yes, has NPWP'
+                            : 'Ya, punya NPWP'
+                          : isEn
+                          ? 'No NPWP'
+                          : 'Belum punya NPWP'}
                       </button>
                     ))}
                   </div>
                   <p className="mt-1 text-[11px] text-slate-500">
-                    Pegawai tanpa NPWP umumnya dikenakan tambahan 20% dari PPh
-                    terutang.
+                    {isEn
+                      ? 'Employees without NPWP are generally subject to an additional 20% on PPh payable.'
+                      : 'Pegawai tanpa NPWP umumnya dikenakan tambahan 20% dari PPh terutang.'}
                   </p>
                 </div>
               </div>
@@ -377,22 +463,44 @@ export function Pph21TerCalculator() {
           {step === 3 && (
             <SectionCard
               step={step}
-              title="Jenis Perhitungan & Periode"
-              description="Pilih apakah ingin menghitung pajak per bulan (TER) atau total tahun berjalan."
+              title={
+                isEn
+                  ? 'Calculation Type & Period'
+                  : 'Jenis Perhitungan & Periode'
+              }
+              description={
+                isEn
+                  ? 'Choose whether to calculate monthly tax (TER) or total tax for the current year.'
+                  : 'Pilih apakah ingin menghitung pajak per bulan (TER) atau total tahun berjalan.'
+              }
             >
               {/* PILIHAN JENIS PERHITUNGAN */}
               <div className="flex flex-col gap-3 md:flex-row">
                 <PillButton
                   active={form.jenisPerhitungan === 'BULANAN'}
                   onClick={() => handleChange('jenisPerhitungan', 'BULANAN')}
-                  title="Pajak Per Bulan"
-                  subtitle="Menggunakan tarif efektif rata-rata (TER) untuk Jan–Nov. Desember dihitung progresif."
+                  title={
+                    isEn ? 'Monthly Tax' : 'Pajak Per Bulan'
+                  }
+                  subtitle={
+                    isEn
+                      ? 'Uses effective average rate (TER) for Jan–Nov. December is calculated progressively.'
+                      : 'Menggunakan tarif efektif rata-rata (TER) untuk Jan–Nov. Desember dihitung progresif.'
+                  }
                 />
                 <PillButton
                   active={form.jenisPerhitungan === 'TAHUNAN'}
                   onClick={() => handleChange('jenisPerhitungan', 'TAHUNAN')}
-                  title="Total Pajak Tahun Berjalan"
-                  subtitle="Bruto x jumlah bulan kerja dikurangi PTKP & pengurang, lalu tarif progresif."
+                  title={
+                    isEn
+                      ? 'Total Tax for Current Year'
+                      : 'Total Pajak Tahun Berjalan'
+                  }
+                  subtitle={
+                    isEn
+                      ? 'Gross x number of working months minus PTKP & deductions, then progressive rates.'
+                      : 'Bruto x jumlah bulan kerja dikurangi PTKP & pengurang, lalu tarif progresif.'
+                  }
                 />
               </div>
 
@@ -400,32 +508,61 @@ export function Pph21TerCalculator() {
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {isBulanan && (
                   <div className="max-w-xs">
-                    <Label required>Bulan Penghasilan</Label>
+                    <Label required>
+                      {isEn ? 'Month of Income' : 'Bulan Penghasilan'}
+                    </Label>
                     <select
                       value={form.bulan}
                       onChange={(e) => handleChange('bulan', e.target.value)}
                       className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                       required
                     >
-                      <option value="">Pilih bulan</option>
-                      <option value="JANUARI">Januari</option>
-                      <option value="FEBRUARI">Februari</option>
-                      <option value="MARET">Maret</option>
-                      <option value="APRIL">April</option>
-                      <option value="MEI">Mei</option>
-                      <option value="JUNI">Juni</option>
-                      <option value="JULI">Juli</option>
-                      <option value="AGUSTUS">Agustus</option>
-                      <option value="SEPTEMBER">September</option>
-                      <option value="OKTOBER">Oktober</option>
-                      <option value="NOVEMBER">November (TER)</option>
+                      <option value="">
+                        {isEn ? 'Select month' : 'Pilih bulan'}
+                      </option>
+                      <option value="JANUARI">
+                        {isEn ? 'January' : 'Januari'}
+                      </option>
+                      <option value="FEBRUARI">
+                        {isEn ? 'February' : 'Februari'}
+                      </option>
+                      <option value="MARET">
+                        {isEn ? 'March' : 'Maret'}
+                      </option>
+                      <option value="APRIL">
+                        {isEn ? 'April' : 'April'}
+                      </option>
+                      <option value="MEI">
+                        {isEn ? 'May' : 'Mei'}
+                      </option>
+                      <option value="JUNI">
+                        {isEn ? 'June' : 'Juni'}
+                      </option>
+                      <option value="JULI">
+                        {isEn ? 'July' : 'Juli'}
+                      </option>
+                      <option value="AGUSTUS">
+                        {isEn ? 'August' : 'Agustus'}
+                      </option>
+                      <option value="SEPTEMBER">
+                        {isEn ? 'September' : 'September'}
+                      </option>
+                      <option value="OKTOBER">
+                        {isEn ? 'October' : 'Oktober'}
+                      </option>
+                      <option value="NOVEMBER">
+                        {isEn ? 'November (TER)' : 'November (TER)'}
+                      </option>
                       <option value="DESEMBER">
-                        Desember (dianggap final progresif)
+                        {isEn
+                          ? 'December (treated as final progressive)'
+                          : 'Desember (dianggap final progresif)'}
                       </option>
                     </select>
                     <p className="mt-1 text-[11px] text-slate-500">
-                      Untuk bulan Desember, perhitungan akan menggunakan
-                      pendekatan pajak tahunan progresif lalu dibagi 12.
+                      {isEn
+                        ? 'For December, the calculation will use annual progressive tax and then be divided by 12.'
+                        : 'Untuk bulan Desember, perhitungan akan menggunakan pendekatan pajak tahunan progresif lalu dibagi 12.'}
                     </p>
                   </div>
                 )}
@@ -433,7 +570,9 @@ export function Pph21TerCalculator() {
                 {form.jenisPerhitungan === 'TAHUNAN' && (
                   <div className="max-w-xs">
                     <Label required>
-                      Masa Penghasilan dalam Setahun (bulan)
+                      {isEn
+                        ? 'Number of Income Months in the Year'
+                        : 'Masa Penghasilan dalam Setahun (bulan)'}
                     </Label>
                     <select
                       value={form.masaKerjaSetahun}
@@ -443,16 +582,21 @@ export function Pph21TerCalculator() {
                       className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                       required
                     >
-                      <option value="">Pilih jumlah bulan</option>
+                      <option value="">
+                        {isEn
+                          ? 'Select number of months'
+                          : 'Pilih jumlah bulan'}
+                      </option>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                         <option key={m} value={m}>
-                          {m} bulan
+                          {isEn ? `${m} months` : `${m} bulan`}
                         </option>
                       ))}
                     </select>
                     <p className="mt-1 text-[11px] text-slate-500">
-                      Isi dengan jumlah masa kerja dalam tahun berjalan (1–12
-                      bulan).
+                      {isEn
+                        ? 'Fill with the number of months worked in the current year (1–12).'
+                        : 'Isi dengan jumlah masa kerja dalam tahun berjalan (1–12 bulan).'}
                     </p>
                   </div>
                 )}
@@ -464,35 +608,61 @@ export function Pph21TerCalculator() {
           {step === 4 && (
             <SectionCard
               step={step}
-              title="Penghasilan Bruto Bulanan"
-              description="Isi seluruh komponen penghasilan bruto pegawai pada bulan yang dihitung."
+              title={
+                isEn ? 'Monthly Gross Income' : 'Penghasilan Bruto Bulanan'
+              }
+              description={
+                isEn
+                  ? 'Fill in all components of employee gross income for the month being calculated.'
+                  : 'Isi seluruh komponen penghasilan bruto pegawai pada bulan yang dihitung.'
+              }
             >
               <div className="grid gap-4 md:grid-cols-2">
                 {(
                   [
-                    ['gajiPokok', 'Gaji Pokok (Rp)', true],
-                    ['tunjanganTetap', 'Tunjangan Tetap (Rp)', false],
                     [
-                      'tunjanganTidakTetap',
-                      'Tunjangan Tidak Tetap / Variabel (Rp)',
+                      'gajiPokok',
+                      isEn ? 'Base Salary (Rp)' : 'Gaji Pokok (Rp)',
+                      true,
+                    ],
+                    [
+                      'tunjanganTetap',
+                      isEn ? 'Fixed Allowances (Rp)' : 'Tunjangan Tetap (Rp)',
                       false,
                     ],
-                    ['bonus', 'Bonus (Rp)', false],
-                    ['thr', 'THR (Rp)', false],
-                    ['tunjanganLain', 'Tunjangan Lainnya (Rp)', false],
+                    [
+                      'tunjanganTidakTetap',
+                      isEn
+                        ? 'Non-fixed / Variable Allowances (Rp)'
+                        : 'Tunjangan Tidak Tetap / Variabel (Rp)',
+                      false,
+                    ],
+                    ['bonus', isEn ? 'Bonus (Rp)' : 'Bonus (Rp)', false],
+                    ['thr', isEn ? 'THR (Rp)' : 'THR (Rp)', false],
+                    [
+                      'tunjanganLain',
+                      isEn ? 'Other Allowances (Rp)' : 'Tunjangan Lainnya (Rp)',
+                      false,
+                    ],
                     [
                       'jkkPerusahaan',
-                      'Tunjangan JKK oleh Perusahaan (Rp)',
+                      isEn
+                        ? 'JKK Allowance paid by Employer (Rp)'
+                        : 'Tunjangan JKK oleh Perusahaan (Rp)',
                       false,
                     ],
                     [
                       'jkmPerusahaan',
-                      'Tunjangan JKM oleh Perusahaan (Rp)',
+                      isEn
+                        ? 'JKM Allowance paid by Employer (Rp)'
+                        : 'Tunjangan JKM oleh Perusahaan (Rp)',
                       false,
                     ],
                     [
                       'bpjsKesehatanPerusahaan',
-                      'Tunjangan BPJS Kesehatan (4% x Gaji) oleh Perusahaan (Rp)',
+                      isEn
+                        ? 'BPJS Health Allowance (4% x Salary) paid by Employer (Rp)'
+                        : 'Tunjangan BPJS Kesehatan (4% x Gaji) oleh Perusahaan (Rp)',
                       false,
                     ],
                   ] as const
@@ -528,12 +698,24 @@ export function Pph21TerCalculator() {
           {step === 5 && (
             <SectionCard
               step={step}
-              title="Potongan yang Diakui Pajak"
-              description="Iuran yang dibayar pegawai dan zakat yang dapat mengurangi penghasilan kena pajak."
+              title={
+                isEn
+                  ? 'Deductions Recognized by Tax'
+                  : 'Potongan yang Diakui Pajak'
+              }
+              description={
+                isEn
+                  ? 'Employee-paid contributions and zakat that may reduce taxable income.'
+                  : 'Iuran yang dibayar pegawai dan zakat yang dapat mengurangi penghasilan kena pajak.'
+              }
             >
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <Label>Iuran Pensiun / JP Dibayar Pegawai (Rp)</Label>
+                  <Label>
+                    {isEn
+                      ? 'Pension / Retirement Contribution paid by Employee (Rp)'
+                      : 'Iuran Pensiun / JP Dibayar Pegawai (Rp)'}
+                  </Label>
                   <input
                     type="text"
                     min={0}
@@ -549,7 +731,11 @@ export function Pph21TerCalculator() {
                   />
                 </div>
                 <div>
-                  <Label>Iuran JHT (Ditanggung Pegawai) (Rp)</Label>
+                  <Label>
+                    {isEn
+                      ? 'JHT Contribution (borne by Employee) (Rp)'
+                      : 'Iuran JHT (Ditanggung Pegawai) (Rp)'}
+                  </Label>
                   <input
                     type="text"
                     min={0}
@@ -565,7 +751,11 @@ export function Pph21TerCalculator() {
                   />
                 </div>
                 <div>
-                  <Label>Zakat / Sedekah via Pemberi Kerja (Rp)</Label>
+                  <Label>
+                    {isEn
+                      ? 'Zakat / Charity via Employer (Rp)'
+                      : 'Zakat / Sedekah via Pemberi Kerja (Rp)'}
+                  </Label>
                   <input
                     type="text"
                     min={0}
@@ -588,15 +778,27 @@ export function Pph21TerCalculator() {
           {step === MAX_STEP && result && (
             <SectionCard
               step={step}
-              title="Hasil Perhitungan PPh21"
-              description="Ringkasan pajak berdasarkan data yang Anda isi di langkah sebelumnya."
+              title={
+                isEn
+                  ? 'PPh21 Calculation Result'
+                  : 'Hasil Perhitungan PPh21'
+              }
+              description={
+                isEn
+                  ? 'Summary of tax based on the data you entered in the previous steps.'
+                  : 'Ringkasan pajak berdasarkan data yang Anda isi di langkah sebelumnya.'
+              }
             >
               <div className="space-y-5 text-sm">
                 {/* HIGHLIGHT ANGKA UTAMA */}
                 <div className="rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-3 text-emerald-50">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
                     {result.jenisPerhitungan === 'BULANAN'
-                      ? 'Perkiraan PPh21 Bulan Ini'
+                      ? isEn
+                        ? 'Estimated PPh21 This Month'
+                        : 'Perkiraan PPh21 Bulan Ini'
+                      : isEn
+                      ? 'Estimated PPh21 for the Year'
                       : 'Perkiraan PPh21 Tahunan'}
                   </p>
                   <p className="mt-1 text-xl font-semibold md:text-2xl">
@@ -607,10 +809,13 @@ export function Pph21TerCalculator() {
                     ).toLocaleString('id-ID')}
                   </p>
                   <p className="mt-1 text-[11px] text-emerald-50/90">
-                    Angka ini merupakan estimasi berdasarkan data yang Anda isi
-                    dan tarif
+                    {isEn ? 'This figure is an estimation based on your data and ' : 'Angka ini merupakan estimasi berdasarkan data yang Anda isi dan tarif'}
                     {result.jenisPerhitungan === 'BULANAN'
-                      ? ' efektif rata-rata (TER).'
+                      ? isEn
+                        ? ' the effective average rate (TER).'
+                        : ' efektif rata-rata (TER).'
+                      : isEn
+                      ? ' annual progressive rates.'
                       : ' progresif tahunan.'}
                   </p>
                 </div>
@@ -618,19 +823,24 @@ export function Pph21TerCalculator() {
                 {/* RINGKASAN UMUM */}
                 <div className="rounded-xl bg-emerald-50 px-3 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-                    Ringkasan
+                    {isEn ? 'Summary' : 'Ringkasan'}
                   </p>
                   <p className="mt-1 text-xs text-slate-700">
-                    Jenis Perhitungan:{' '}
+                    {isEn ? 'Calculation Type: ' : 'Jenis Perhitungan: '}{' '}
                     <span className="font-semibold text-slate-900">
                       {result.jenisPerhitungan === 'BULANAN'
-                        ? 'Pajak Per Bulan (TER)'
+                        ? isEn
+                          ? 'Monthly Tax (TER)'
+                          : 'Pajak Per Bulan (TER)'
+                        : isEn
+                        ? 'Total Tax for Current Year'
                         : 'Total Pajak Tahun Berjalan'}
                     </span>
                     {result.bulan && (
                       <>
                         {' '}
-                        • Bulan{' '}
+                        • {isEn ? 'Month ' : 'Bulan '}
+
                         <span className="font-semibold">{result.bulan}</span>
                       </>
                     )}
@@ -642,7 +852,9 @@ export function Pph21TerCalculator() {
                   {typeof result.pph21Bulanan === 'number' && (
                     <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2">
                       <p className="text-[11px] text-slate-500">
-                        Perkiraan PPh21 Bulan Ini
+                        {isEn
+                          ? 'Estimated PPh21 This Month'
+                          : 'Perkiraan PPh21 Bulan Ini'}
                       </p>
                       <p className="text-sm font-semibold text-emerald-800 md:text-base">
                         Rp {result.pph21Bulanan.toLocaleString('id-ID')}
@@ -653,7 +865,9 @@ export function Pph21TerCalculator() {
                   {typeof result.pph21Tahunan === 'number' && (
                     <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2">
                       <p className="text-[11px] text-slate-500">
-                        Perkiraan PPh21 Tahunan
+                        {isEn
+                          ? 'Estimated PPh21 for the Year'
+                          : 'Perkiraan PPh21 Tahunan'}
                       </p>
                       <p className="text-sm font-semibold text-emerald-800 md:text-base">
                         Rp {result.pph21Tahunan.toLocaleString('id-ID')}
@@ -666,7 +880,7 @@ export function Pph21TerCalculator() {
                 {result.catatan.length > 0 && (
                   <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2">
                     <p className="text-[11px] font-medium text-slate-600">
-                      Catatan Perhitungan:
+                      {isEn ? 'Calculation Notes:' : 'Catatan Perhitungan:'}
                     </p>
                     <ul className="mt-1 list-disc space-y-1 pl-4 text-[11px] text-slate-600">
                       {result.catatan.map((note, idx) => (
@@ -678,13 +892,14 @@ export function Pph21TerCalculator() {
 
                 {/* INFO KECIL */}
                 <p className="mt-1 text-[10px] text-slate-500">
-                  Hasil ini hanya simulasi berdasarkan tarif TER / progresif.
-                  Untuk pelaporan resmi dan rekonsiliasi, tetap disarankan
-                  melakukan review bersama tim pajak atau konsultan.
+                  {isEn
+                    ? 'This result is only a simulation based on TER / progressive rates. For official reporting and reconciliation, it is strongly recommended to review with your tax team or consultant.'
+                    : 'Hasil ini hanya simulasi berdasarkan tarif TER / progresif. Untuk pelaporan resmi dan rekonsiliasi, tetap disarankan melakukan review bersama tim pajak atau konsultan.'}
                 </p>
               </div>
             </SectionCard>
           )}
+
           {/* ERROR + NAV + RESET */}
           <div className="mt-1 space-y-3 border-t border-dashed border-slate-200 pt-3">
             {error && (
@@ -696,13 +911,19 @@ export function Pph21TerCalculator() {
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-[11px] text-slate-500">
                 <span className="inline-flex h-6 items-center rounded-full bg-slate-100 px-2 text-[10px] font-medium text-slate-700">
-                  Step {step} / {MAX_STEP}
+                  {isEn ? 'Step' : 'Step'} {step} / {MAX_STEP}
                 </span>
                 <span>
                   {step < MAX_INPUT_STEP
-                    ? 'Lengkapi data lalu klik Lanjut.'
+                    ? isEn
+                      ? 'Complete the data, then click Next.'
+                      : 'Lengkapi data lalu klik Lanjut.'
                     : step === MAX_INPUT_STEP
-                    ? 'Klik Hitung PPh21 untuk pindah ke section hasil.'
+                    ? isEn
+                      ? 'Click Calculate PPh21 to go to the result section.'
+                      : 'Klik Hitung PPh21 untuk pindah ke section hasil.'
+                    : isEn
+                    ? 'This is the result summary. You can go back to change the data if needed.'
                     : 'Ini adalah ringkasan hasil. Anda bisa kembali untuk mengubah data jika perlu.'}
                 </span>
               </div>
@@ -714,19 +935,25 @@ export function Pph21TerCalculator() {
                     onClick={handlePrev}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
                   >
-                    Kembali
+                    {isEn ? 'Back' : 'Kembali'}
                   </button>
                 )}
 
                 {step < MAX_INPUT_STEP && (
                   <Button type="button" size="md" onClick={handleNext}>
-                    Lanjut
+                    {isEn ? 'Next' : 'Lanjut'}
                   </Button>
                 )}
 
                 {step === MAX_INPUT_STEP && (
                   <Button type="submit" size="md" disabled={isSubmitting}>
-                    {isSubmitting ? 'Menghitung...' : 'Hitung PPh21'}
+                    {isSubmitting
+                      ? isEn
+                        ? 'Calculating...'
+                        : 'Menghitung...'
+                      : isEn
+                      ? 'Calculate PPh21'
+                      : 'Hitung PPh21'}
                   </Button>
                 )}
 
@@ -737,7 +964,7 @@ export function Pph21TerCalculator() {
                     variant="secondary"
                     onClick={() => setStep(1)}
                   >
-                    Ubah Data
+                    {isEn ? 'Edit Data' : 'Ubah Data'}
                   </Button>
                 )}
               </div>
@@ -754,7 +981,7 @@ export function Pph21TerCalculator() {
                 }}
                 className="text-[11px] text-slate-500 underline-offset-2 hover:text-emerald-700 hover:underline"
               >
-                Reset semua step
+                {isEn ? 'Reset all steps' : 'Reset semua step'}
               </button>
             </div>
           </div>
@@ -762,20 +989,19 @@ export function Pph21TerCalculator() {
 
         {/* RIGHT: HELP CARD SELALU DI SEBELAH KANAN */}
         <aside className="space-y-4 md:sticky md:top-24">
-          <StepHelpCard step={step} preview={preview} />
+          <StepHelpCard step={step} preview={preview} lang={lang} />
         </aside>
       </div>
 
       {/* DISCLAIMER GLOBAL */}
       <div className="rounded-2xl bg-emerald-900/95 p-4 text-[11px] text-emerald-50 shadow-soft">
         <p className="font-semibold uppercase tracking-wide text-emerald-200">
-          Disclaimer
+          {isEn ? 'Disclaimer' : 'Disclaimer'}
         </p>
         <p className="mt-1">
-          Kalkulator ini dibuat untuk keperluan simulasi dan edukasi. Hasil
-          perhitungan dapat berbeda dengan perhitungan resmi Direktorat Jenderal
-          Pajak atau kebijakan internal perusahaan. Selalu lakukan review
-          bersama konsultan pajak sebelum pengambilan keputusan.
+          {isEn
+            ? 'This calculator is built for simulation and educational purposes. The results may differ from the official calculation by the Directorate General of Taxes or internal company policies. Always review with a tax consultant before making decisions.'
+            : 'Kalkulator ini dibuat untuk keperluan simulasi dan edukasi. Hasil perhitungan dapat berbeda dengan perhitungan resmi Direktorat Jenderal Pajak atau kebijakan internal perusahaan. Selalu lakukan review bersama konsultan pajak sebelum pengambilan keputusan.'}
         </p>
       </div>
     </div>
@@ -860,23 +1086,34 @@ function Label({ children, required }: LabelProps) {
 type StepHelpCardProps = {
   step: number;
   preview: { bruto: number; pengurang: number };
+  lang: Lang;
 };
 
-function StepHelpCard({ step, preview }: StepHelpCardProps) {
+function StepHelpCard({ step, preview, lang }: StepHelpCardProps) {
+  const isEn = lang === 'en';
+
   if (step === 1) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-white p-4 text-[11px] text-slate-600 shadow-soft">
         <p className="text-xs font-semibold text-slate-800">
-          Bantuan: Identitas Pegawai
+          {isEn ? 'Help: Employee Identity' : 'Bantuan: Identitas Pegawai'}
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <span className="font-medium">Nama Pegawai</span> digunakan untuk
-            identifikasi di laporan dan bukti potong.
+            <span className="font-medium">
+              {isEn ? 'Employee Name' : 'Nama Pegawai'}
+            </span>{' '}
+            {isEn
+              ? 'is used for identification in reports and withholding slips.'
+              : 'digunakan untuk identifikasi di laporan dan bukti potong.'}
           </li>
           <li>
-            <span className="font-medium">Jenis Kelamin</span> tidak mengubah
-            nilai pajak, tetapi penting untuk data personal dan administrasi.
+            <span className="font-medium">
+              {isEn ? 'Gender' : 'Jenis Kelamin'}
+            </span>{' '}
+            {isEn
+              ? 'does not change the tax amount, but is important for personal and administrative data.'
+              : 'tidak mengubah nilai pajak, tetapi penting untuk data personal dan administrasi.'}
           </li>
         </ul>
       </div>
@@ -887,22 +1124,33 @@ function StepHelpCard({ step, preview }: StepHelpCardProps) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-white p-4 text-[11px] text-slate-600 shadow-soft">
         <p className="text-xs font-semibold text-slate-800">
-          Bantuan: Status PTKP & NPWP
+          {isEn
+            ? 'Help: PTKP Status & NPWP'
+            : 'Bantuan: Status PTKP & NPWP'}
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <span className="font-medium">Status PTKP</span> (TK/K + tanggungan)
-            menentukan besar Penghasilan Tidak Kena Pajak.
+            <span className="font-medium">PTKP</span>{' '}
+            {isEn
+              ? 'status determines the amount of non-taxable income.'
+              : 'menentukan besar Penghasilan Tidak Kena Pajak.'}
           </li>
           <li>
-            <span className="font-medium">TK</span> = Tidak Kawin,{' '}
-            <span className="font-medium">K</span> = Kawin. Angka 0–3
-            menunjukkan jumlah tanggungan yang diakui.
+            <span className="font-medium">TK</span> ={' '}
+            {isEn ? 'Single (unmarried)' : 'Tidak Kawin'},{' '}
+            <span className="font-medium">K</span> ={' '}
+            {isEn ? 'Married' : 'Kawin'}.{' '}
+            {isEn
+              ? 'The number 0–3 shows the number of dependents recognized.'
+              : 'Angka 0–3 menunjukkan jumlah tanggungan yang diakui.'}
           </li>
           <li>
-            <span className="font-medium">Memiliki NPWP</span> biasanya wajib
-            untuk pegawai tetap. Jika tidak, PPh21 umumnya dikenakan tambahan
-            20%.
+            <span className="font-medium">
+              {isEn ? 'Having NPWP' : 'Memiliki NPWP'}
+            </span>{' '}
+            {isEn
+              ? 'is generally mandatory for permanent employees. Without NPWP, PPh21 is usually increased by 20%.'
+              : 'biasanya wajib untuk pegawai tetap. Jika tidak, PPh21 umumnya dikenakan tambahan 20%.'}
           </li>
         </ul>
       </div>
@@ -913,21 +1161,36 @@ function StepHelpCard({ step, preview }: StepHelpCardProps) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-white p-4 text-[11px] text-slate-600 shadow-soft">
         <p className="text-xs font-semibold text-slate-800">
-          Bantuan: Jenis Perhitungan & Periode
+          {isEn
+            ? 'Help: Calculation Type & Period'
+            : 'Bantuan: Jenis Perhitungan & Periode'}
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <span className="font-medium">Pajak Per Bulan</span> menghitung
-            PPh21 hanya untuk 1 bulan tertentu dengan tarif efektif rata-rata
-            (TER).
+            <span className="font-medium">
+              {isEn ? 'Monthly Tax' : 'Pajak Per Bulan'}
+            </span>{' '}
+            {isEn
+              ? 'calculates PPh21 only for one specific month using the effective average rate (TER).'
+              : 'menghitung PPh21 hanya untuk 1 bulan tertentu dengan tarif efektif rata-rata (TER).'}
           </li>
           <li>
-            <span className="font-medium">Desember</span> biasanya sebagai
-            pelunasan pajak setahun, dihitung dengan tarif progresif tahunan.
+            <span className="font-medium">
+              {isEn ? 'December' : 'Desember'}
+            </span>{' '}
+            {isEn
+              ? 'is usually treated as a year-end settlement using annual progressive rates.'
+              : 'biasanya sebagai pelunasan pajak setahun, dihitung dengan tarif progresif tahunan.'}
           </li>
           <li>
-            <span className="font-medium">Total Pajak Tahun Berjalan</span>{' '}
-            memperkirakan pajak 1 tahun penuh dari data bruto bulanan.
+            <span className="font-medium">
+              {isEn
+                ? 'Total Tax for Current Year'
+                : 'Total Pajak Tahun Berjalan'}
+            </span>{' '}
+            {isEn
+              ? 'estimates full-year tax from monthly gross data.'
+              : 'memperkirakan pajak 1 tahun penuh dari data bruto bulanan.'}
           </li>
         </ul>
       </div>
@@ -938,36 +1201,60 @@ function StepHelpCard({ step, preview }: StepHelpCardProps) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-white p-4 text-[11px] text-slate-600 shadow-soft">
         <p className="text-xs font-semibold text-slate-800">
-          Bantuan: Komponen Penghasilan Bruto
+          {isEn
+            ? 'Help: Components of Gross Income'
+            : 'Bantuan: Komponen Penghasilan Bruto'}
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <span className="font-medium">Gaji Pokok</span> = penghasilan utama
-            yang diterima tiap bulan.
+            <span className="font-medium">
+              {isEn ? 'Base Salary' : 'Gaji Pokok'}
+            </span>{' '}
+            {isEn
+              ? '= main income received each month.'
+              : '= penghasilan utama yang diterima tiap bulan.'}
           </li>
           <li>
-            <span className="font-medium">Tunjangan Tetap</span> contoh:
-            tunjangan jabatan, komunikasi, transport tetap.
+            <span className="font-medium">
+              {isEn ? 'Fixed Allowances' : 'Tunjangan Tetap'}
+            </span>{' '}
+            {isEn
+              ? 'e.g. position allowance, communication, fixed transport.'
+              : 'contoh: tunjangan jabatan, komunikasi, transport tetap.'}
           </li>
           <li>
-            <span className="font-medium">Tunjangan Tidak Tetap</span> contoh:
-            lembur, insentif, uang makan yang tidak fixed.
+            <span className="font-medium">
+              {isEn ? 'Non-fixed Allowances' : 'Tunjangan Tidak Tetap'}
+            </span>{' '}
+            {isEn
+              ? 'e.g. overtime, incentives, non-fixed meal allowance.'
+              : 'contoh: lembur, insentif, uang makan yang tidak fixed.'}
           </li>
           <li>
-            <span className="font-medium">Bonus / THR</span> diisi saat ada
-            bonus atau THR di bulan tersebut.
+            <span className="font-medium">Bonus / THR</span>{' '}
+            {isEn
+              ? 'are filled when there is a bonus or THR in that month.'
+              : 'diisi saat ada bonus atau THR di bulan tersebut.'}
           </li>
           <li>
-            <span className="font-medium">Tunjangan PPh (Gross-Up)</span> =
-            tunjangan untuk menutup PPh pegawai.
+            <span className="font-medium">
+              {isEn ? 'Tax Allowance (Gross-Up)' : 'Tunjangan PPh (Gross-Up)'}
+            </span>{' '}
+            {isEn
+              ? '= allowance to cover employee’s tax.'
+              : '= tunjangan untuk menutup PPh pegawai.'}
           </li>
           <li>
-            <span className="font-medium">JKK & JKM</span> dibayar perusahaan
-            tetapi diakui sebagai komponen bruto untuk pajak.
+            <span className="font-medium">JKK & JKM</span>{' '}
+            {isEn
+              ? 'paid by the employer are treated as part of gross for tax.'
+              : 'dibayar perusahaan tetapi diakui sebagai komponen bruto untuk pajak.'}
           </li>
         </ul>
         <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2">
-          <p className="text-[10px] text-slate-500">Preview Bruto Bulanan</p>
+          <p className="text-[10px] text-slate-500">
+            {isEn ? 'Preview Monthly Gross' : 'Preview Bruto Bulanan'}
+          </p>
           <p className="text-sm font-semibold text-emerald-800">
             Rp {preview.bruto.toLocaleString('id-ID')}
           </p>
@@ -980,26 +1267,39 @@ function StepHelpCard({ step, preview }: StepHelpCardProps) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-white p-4 text-[11px] text-slate-600 shadow-soft">
         <p className="text-xs font-semibold text-slate-800">
-          Bantuan: Potongan yang Diakui Pajak
+          {isEn
+            ? 'Help: Deductions Recognized by Tax'
+            : 'Bantuan: Potongan yang Diakui Pajak'}
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <span className="font-medium">Iuran Pensiun / JP</span> tertentu
-            bisa mengurangi penghasilan bruto (sesuai regulasi).
+            <span className="font-medium">
+              {isEn ? 'Pension / JP Contributions' : 'Iuran Pensiun / JP'}
+            </span>{' '}
+            {isEn
+              ? 'may reduce gross income according to regulations.'
+              : 'tertentu bisa mengurangi penghasilan bruto (sesuai regulasi).'}
           </li>
           <li>
-            <span className="font-medium">Iuran JHT</span> yang ditanggung
-            pegawai juga bisa menjadi pengurang.
+            <span className="font-medium">
+              {isEn ? 'JHT Contributions' : 'Iuran JHT'}
+            </span>{' '}
+            {isEn
+              ? 'paid by the employee can also be a deduction.'
+              : 'yang ditanggung pegawai juga bisa menjadi pengurang.'}
           </li>
           <li>
-            <span className="font-medium">Zakat / Sedekah</span> yang disalurkan
-            via pemberi kerja & lembaga resmi dapat mengurangi penghasilan kena
-            pajak.
+            <span className="font-medium">
+              {isEn ? 'Zakat / Charity' : 'Zakat / Sedekah'}
+            </span>{' '}
+            {isEn
+              ? 'channeled via employer & official institutions may reduce taxable income.'
+              : 'yang disalurkan via pemberi kerja & lembaga resmi dapat mengurangi penghasilan kena pajak.'}
           </li>
         </ul>
         <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2">
           <p className="text-[10px] text-slate-500">
-            Preview Pengurang Bulanan
+            {isEn ? 'Preview Monthly Deductions' : 'Preview Pengurang Bulanan'}
           </p>
           <p className="text-sm font-semibold text-emerald-800">
             Rp {preview.pengurang.toLocaleString('id-ID')}
@@ -1013,28 +1313,58 @@ function StepHelpCard({ step, preview }: StepHelpCardProps) {
     return (
       <div className="rounded-2xl border border-emerald-100 bg-white p-4 text-[11px] text-slate-600 shadow-soft">
         <p className="text-xs font-semibold text-emerald-900">
-          Bantuan: Membaca Hasil PPh21
+          {isEn
+            ? 'Help: Reading the PPh21 Result'
+            : 'Bantuan: Membaca Hasil PPh21'}
         </p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <span className="font-medium">Pengurang Bulanan</span> berisi iuran
-            yang diakui pajak (pensiun, JHT, zakat tertentu).
+            <span className="font-medium">
+              {isEn ? 'Monthly Deductions' : 'Pengurang Bulanan'}
+            </span>{' '}
+            {isEn
+              ? 'contain contributions recognized by tax (pension, JHT, certain zakat).'
+              : 'berisi iuran yang diakui pajak (pensiun, JHT, zakat tertentu).'}
           </li>
           <li>
-            Jika jenis perhitungan <span className="font-medium">BULANAN</span>,
-            fokus di nilai <span className="font-medium">PPh21 Bulan Ini</span>.
+            {isEn ? (
+              <>
+                If the calculation type is{' '}
+                <span className="font-medium">MONTHLY</span>, focus on the value{' '}
+                <span className="font-medium">PPh21 This Month</span>.
+              </>
+            ) : (
+              <>
+                Jika jenis perhitungan{' '}
+                <span className="font-medium">BULANAN</span>, fokus di nilai{' '}
+                <span className="font-medium">PPh21 Bulan Ini</span>.
+              </>
+            )}
           </li>
           <li>
-            Jika jenis perhitungan <span className="font-medium">TAHUNAN</span>,
-            perhatikan <span className="font-medium">PKP Tahunan</span> dan{' '}
-            <span className="font-medium">PPh21 Tahunan</span> untuk estimasi
-            total pajak setahun.
+            {isEn ? (
+              <>
+                If the calculation type is{' '}
+                <span className="font-medium">ANNUAL</span>, pay attention to{' '}
+                <span className="font-medium">Annual PKP</span> and{' '}
+                <span className="font-medium">Annual PPh21</span> for the
+                full-year tax estimation.
+              </>
+            ) : (
+              <>
+                Jika jenis perhitungan{' '}
+                <span className="font-medium">TAHUNAN</span>, perhatikan{' '}
+                <span className="font-medium">PKP Tahunan</span> dan{' '}
+                <span className="font-medium">PPh21 Tahunan</span> untuk estimasi
+                total pajak setahun.
+              </>
+            )}
           </li>
         </ul>
         <p className="mt-2 text-[10px] text-slate-500">
-          Jika angka terasa tidak wajar, Anda bisa klik{' '}
-          <span className="font-medium">Ubah Data</span> untuk kembali ke Step 1
-          dan menyesuaikan input.
+          {isEn
+            ? 'If the numbers feel off, you can click “Edit Data” to go back to Step 1 and adjust your inputs.'
+            : 'Jika angka terasa tidak wajar, Anda bisa klik “Ubah Data” untuk kembali ke Step 1 dan menyesuaikan input.'}
         </p>
       </div>
     );

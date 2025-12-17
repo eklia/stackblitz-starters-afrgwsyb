@@ -1,6 +1,7 @@
-// app/calculators/pph21-ter/page.tsx
+'use client';
+
+import type { Lang } from '@/lib/types';
 import { Pph21TerCalculator } from '@/components/calculators/Pph21TerCalculator';
-import { Lang } from '@/lib/types';
 
 type PageProps = {
   params: {
@@ -9,10 +10,12 @@ type PageProps = {
 };
 
 export default function Pph21TerPage({ params }: PageProps) {
+  const lang: Lang = params.lang === 'en' ? 'en' : 'id';
+
   return (
-    <main className="min-h-screen bg-emerald-50/40 px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-5xl">
-        <Pph21TerCalculator />
+    <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-emerald-50/40 to-slate-50 pb-10 pt-20">
+      <div className="mx-auto max-w-5xl px-4">
+        <Pph21TerCalculator lang={lang} />
       </div>
     </main>
   );
