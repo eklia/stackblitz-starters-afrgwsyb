@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { Lang } from '@/lib/types';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { buildLangHref } from '@/lib/utils'; 
+import { getTranslations } from '@/lib/i18n';
 
 type Props = {
   lang: Lang;
@@ -15,6 +16,9 @@ type Props = {
 export function Navbar({ lang }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const t = getTranslations(lang); 
+  const nav = t.nav;                 
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -47,25 +51,25 @@ export function Navbar({ lang }: Props) {
             href={buildLangHref(lang ,`#beranda`)}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
-            Beranda
+            {nav.home}
           </Link>
           <Link
             href={buildLangHref(lang ,`#layanan`)}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
-            Layanan
+            {nav.services}
           </Link>
           <Link
             href={buildLangHref(lang ,`#tentang`)}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
-            Tentang
+            {nav.about}
           </Link>
           <Link
             href={buildLangHref(lang ,`#faq`)}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
-            FAQ
+            {nav.faq}
           </Link>
 
           <LanguageSwitcher lang={lang} />
@@ -74,14 +78,14 @@ export function Navbar({ lang }: Props) {
             href={buildLangHref(lang ,`/request`)}
             className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
           >
-            Konsultasi Gratis
+            {nav.freeConsult}
           </Link>
 
           <Link
             href={buildLangHref(lang ,`/calculators`)}
             className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
           >
-            Coba Calculator
+            {nav.tryCalculator}
           </Link>
         </div>
 
@@ -127,28 +131,28 @@ export function Navbar({ lang }: Props) {
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
-              Beranda
+              {nav.home}
             </Link>
             <Link
               href="#layanan"
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
-              Layanan
+              {nav.services}
             </Link>
             <Link
               href="#tentang"
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
-              Tentang
+              {nav.about}
             </Link>
             <Link
               href="#faq"
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
-              FAQ
+              {nav.faq}
             </Link>
 
             <Link
@@ -156,7 +160,7 @@ export function Navbar({ lang }: Props) {
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
             >
-              Konsultasi Gratis
+              {nav.freeConsult}
             </Link>
 
             <Link
@@ -164,7 +168,7 @@ export function Navbar({ lang }: Props) {
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
             >
-              Coba Calculator
+              {nav.tryCalculator}
             </Link>
           </div>
         </div>

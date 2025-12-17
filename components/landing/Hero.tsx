@@ -21,27 +21,28 @@ type Promo = {
 };
 
 export function Hero({ t, lang }: Props) {
-  const promos: Promo[] = (t as any).promos ?? [
-    {
-      badge: 'Promo Akhir Tahun',
-      title: 'Diskon 20% untuk laporan SPT Tahunan Pribadi.',
-      subtitle: 'Berlaku untuk pendaftaran sebelum 31 Desember 2025.',
-      href: '#layanan',
-    },
-    {
-      badge: 'Prioritas UMKM',
-      title: 'Layanan paket pajak bulanan khusus UMKM.',
-      subtitle: 'Mulai dari Rp 300.000/bulan untuk pengelolaan pajak rutin.',
-      href: '#layanan',
-    },
-    {
-      badge: 'Konsultasi Gratis',
-      title: 'Sesi konsultasi awal 30 menit tanpa biaya.',
-      subtitle: 'Bantu cek kondisi pajak kamu sebelum mulai berlangganan.',
-      href: '/request',
-    },
-  ];
+  // const promos: Promo[] = (t as any).promos ?? [
+  //   {
+  //     badge: 'Promo Akhir Tahun',
+  //     title: 'Diskon 20% untuk laporan SPT Tahunan Pribadi.',
+  //     subtitle: 'Berlaku untuk pendaftaran sebelum 31 Desember 2025.',
+  //     href: '#layanan',
+  //   },
+  //   {
+  //     badge: 'Prioritas UMKM',
+  //     title: 'Layanan paket pajak bulanan khusus UMKM.',
+  //     subtitle: 'Mulai dari Rp 300.000/bulan untuk pengelolaan pajak rutin.',
+  //     href: '#layanan',
+  //   },
+  //   {
+  //     badge: 'Konsultasi Gratis',
+  //     title: 'Sesi konsultasi awal 30 menit tanpa biaya.',
+  //     subtitle: 'Bantu cek kondisi pajak kamu sebelum mulai berlangganan.',
+  //     href: '/request',
+  //   },
+  // ];
 
+  const promos: Promo[] = t.promos ?? [];
   const [promoIndex, setPromoIndex] = useState(0);
 
   useEffect(() => {
@@ -191,10 +192,10 @@ export function Hero({ t, lang }: Props) {
             <div className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/60 px-3 py-2 text-[11px] md:mt-5 md:px-4 md:py-3">
               <div className="flex flex-1 flex-col gap-0.5">
                 <span className="font-semibold text-emerald-900">
-                  {t.calculatorHelper}
+                  {t.calculatorHelperTitle}
                 </span>
                 <span className="text-[11px] text-emerald-700">
-                  Cocok untuk cek cepat kewajiban pajak sebelum konsultasi.
+                  {t.calculatorHelperSubtitle}
                 </span>
               </div>
               <Link href={buildLangHref(lang, `/calculators`)}>

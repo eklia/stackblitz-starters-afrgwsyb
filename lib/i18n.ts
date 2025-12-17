@@ -1,6 +1,13 @@
 // lib/i18n.ts
 import { Lang } from './types';
 
+type HeroPromo = {
+  badge: string;
+  title: string;
+  subtitle?: string;
+  href?: string;
+};
+
 type HeroTranslation = {
   badge: string;
   titleLine1: string;
@@ -12,6 +19,21 @@ type HeroTranslation = {
   ratingMain: string;
   calculatorCta: string;
   calculatorHelper: string;
+
+  calculatorHelperTitle: string;
+  calculatorHelperSubtitle: string;
+  trustedCaption: string;
+
+  promos: HeroPromo[];
+};
+
+type NavTranslation = {
+  home: string;
+  services: string;
+  about: string;
+  faq: string;
+  freeConsult: string;
+  tryCalculator: string;
 };
 
 type StatsTranslation = {
@@ -128,6 +150,7 @@ export type FooterTranslation = {
 };
 
 export type Translations = {
+  nav: NavTranslation;
   hero: HeroTranslation;
   stats: StatsTranslation;
   whyChoose: WhyChooseTranslation;
@@ -142,6 +165,14 @@ export type Translations = {
 
 const translations: Record<Lang, Translations> = {
   id: {
+    nav: {
+      home: 'Beranda',
+      services: 'Layanan',
+      about: 'Tentang',
+      faq: 'FAQ',
+      freeConsult: 'Konsultasi Gratis',
+      tryCalculator: 'Coba Kalkulator',
+    },
     hero: {
       badge: 'Terpercaya oleh 3500+ Klien',
       titleLine1: 'Kelola Pajak Anda',
@@ -152,8 +183,35 @@ const translations: Record<Lang, Translations> = {
       primaryCta: 'Mulai Konsultasi',
       secondaryCta: 'Pelajari Layanan',
       ratingMain: '3500+ Klien Puas',
-      calculatorCta: 'Coba Kalkulator Pajak',
       calculatorHelper: 'Gratis untuk kalkulator dasar PPh21 & fitur simulasi lainnya.',
+      calculatorHelperTitle: 'Gunakan kalkulator pajak kami',
+      calculatorHelperSubtitle:
+        'Cocok untuk cek cepat kewajiban pajak sebelum konsultasi.',
+      calculatorCta: 'Lihat semua kalkulator',
+      trustedCaption:
+        'Dipercaya klien individu & bisnis di berbagai kota.',
+
+      promos: [
+        {
+          badge: 'Promo Akhir Tahun',
+          title: 'Diskon 20% untuk laporan SPT Tahunan Pribadi.',
+          subtitle: 'Berlaku untuk pendaftaran sebelum 31 Desember 2025.',
+          href: '#layanan',
+        },
+        {
+          badge: 'Prioritas UMKM',
+          title: 'Paket pajak bulanan khusus UMKM.',
+          subtitle: 'Mulai dari Rp 300.000/bulan untuk pengelolaan pajak rutin.',
+          href: '#layanan',
+        },
+        {
+          badge: 'Konsultasi Gratis',
+          title: 'Sesi konsultasi awal 30 menit tanpa biaya.',
+          subtitle:
+            'Bantu cek kondisi pajak kamu sebelum mulai berlangganan.',
+          href: '/request',
+        },
+      ],
     },
     stats: {
       items: [
@@ -393,6 +451,14 @@ const translations: Record<Lang, Translations> = {
 
   // ================= ENGLISH =================
   en: {
+    nav: {
+      home: 'Home',
+      services: 'Services',
+      about: 'About',
+      faq: 'FAQ',
+      freeConsult: 'Free Consultation',
+      tryCalculator: 'Try Calculators',
+    },
     hero: {
       badge: 'Trusted by 3500+ Clients',
       titleLine1: 'Manage Your Taxes',
@@ -403,8 +469,36 @@ const translations: Record<Lang, Translations> = {
       primaryCta: 'Start Consultation',
       secondaryCta: 'Explore Services',
       ratingMain: '3500+ Happy Clients',
-      calculatorCta: 'Try Tax Calculators',
       calculatorHelper: 'Free basic PPh21 calculator and other simulation tools.',
+      calculatorHelperTitle: 'Use our tax calculators',
+      calculatorHelperSubtitle:
+        'Perfect for a quick check of your tax obligations before consulting.',
+      calculatorCta: 'View all calculators',
+      trustedCaption:
+        'Trusted by individual and business clients across many cities.',
+
+      promos: [
+        {
+          badge: 'Year-End Promo',
+          title: '20% off annual personal tax filing.',
+          subtitle: 'Valid for registrations before 31 December 2025.',
+          href: '#layanan',
+        },
+        {
+          badge: 'SME Priority',
+          title: 'Monthly tax package for SMEs.',
+          subtitle:
+            'Starting from IDR 300,000 / month for ongoing tax management.',
+          href: '#layanan',
+        },
+        {
+          badge: 'Free Consultation',
+          title: 'First 30-minute consultation is free.',
+          subtitle:
+            'Check your tax position before you subscribe to our services.',
+          href: '/request',
+        },
+      ],
     },
     stats: {
       items: [
