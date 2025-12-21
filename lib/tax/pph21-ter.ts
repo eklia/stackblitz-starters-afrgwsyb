@@ -117,14 +117,31 @@ function getPtkpAmount(status: PtkpStatus): number {
 
 /* ========= HELPER: KATEGORI TER ========= */
 
-// Mengikuti deskripsi partner:
-// A → TK/0, TK/1, TK/2, TK/3, K/0
-// B → TK/2, K/1, TK/3, K/2 (PTKP 63–67,5 jt)
-// C → TK/3 (PTKP 70 jt)
-// Jika status masuk beberapa kategori, kita beri prioritas: C > B > A
-function getTerCategory(status: PtkpStatus): 'A' | 'B' | 'C' {
-  if (status === 'TK/3') return 'C';
-  if (status === 'TK/2' || status === 'K/1' || status === 'K/2') return 'B';
+export type TerCategory = 'A' | 'B' | 'C';
+
+/**
+ * Menentukan kategori TER (A/B/C) berdasarkan PTKP setahun,
+ * sesuai dokumen partner:
+ * - TER B → PTKP 63 jt & 67,5 jt
+ * - TER C → PTKP 70 jt
+ * - selain itu → TER A
+ *
+ * Kalau angka PTKP di-update, cukup ubah getPtkpAmount.
+ */
+export function getTerCategory(status: PtkpStatus): TerCategory {
+  const ptkp = getPtkpAmount(status);
+
+  // TER B: PTKP 63 jt atau 67,5 jt
+  if (ptkp === 63_000_000 || ptkp === 67_500_000) {
+    return 'B';
+  }
+
+  // TER C: PTKP 70 jt
+  if (ptkp === 70_000_000) {
+    return 'C';
+  }
+
+  // selain itu TER A
   return 'A';
 }
 
@@ -133,8 +150,9 @@ type TerBracket = {
   rate: number; // misal 0.025 = 2.5%
 };
 
-// Tabel A, B, C di bawah mengikuti angka yang kamu kirim (jika partner kirim excel final, tinggal update di sini)
+// Tabel A, B, C di bawah mengikuti angka yang kamu kirim (kalau partner update excel final, update di sini)
 
+/** TER Kategori A */
 const TER_A: TerBracket[] = [
   { max: 5_400_000, rate: 0 },
   { max: 5_650_000, rate: 0.0025 },
@@ -182,6 +200,7 @@ const TER_A: TerBracket[] = [
   { max: null, rate: 0.34 },
 ];
 
+/** TER Kategori B */
 const TER_B: TerBracket[] = [
   { max: 6_200_000, rate: 0 },
   { max: 6_500_000, rate: 0.0025 },
@@ -225,6 +244,7 @@ const TER_B: TerBracket[] = [
   { max: null, rate: 0.34 },
 ];
 
+/** TER Kategori C */
 const TER_C: TerBracket[] = [
   { max: 6_600_000, rate: 0 },
   { max: 6_950_000, rate: 0.0025 },
@@ -270,7 +290,7 @@ const TER_C: TerBracket[] = [
   { max: null, rate: 0.34 },
 ];
 
-function findTerRate(kategori: 'A' | 'B' | 'C', brutoBulanan: number): number {
+function findTerRate(kategori: TerCategory, brutoBulanan: number): number {
   const table = kategori === 'A' ? TER_A : kategori === 'B' ? TER_B : TER_C;
   for (const row of table) {
     if (row.max === null || brutoBulanan <= row.max) {
@@ -278,6 +298,18 @@ function findTerRate(kategori: 'A' | 'B' | 'C', brutoBulanan: number): number {
     }
   }
   return table[table.length - 1].rate;
+}
+
+/**
+ * Helper publik: langsung dapat tarif TER dari status PTKP + bruto.
+ * Bisa dipakai juga di kalkulator-kalkulator lain (misal gaji + bonus).
+ */
+export function getTerRateFromStatus(
+  status: PtkpStatus,
+  brutoBulanan: number
+): number {
+  const kategori = getTerCategory(status);
+  return findTerRate(kategori, brutoBulanan);
 }
 
 /* ========= HELPER: PROGRESIF ========= */

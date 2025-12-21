@@ -21,53 +21,27 @@ type CalculatorItem = {
 
 const calculators: CalculatorItem[] = [
   {
-    id: 'pph21-basic',
-    name: 'Kalkulator PPh 21 (Basic)',
-    description:
-      'Hitung estimasi PPh 21 bulanan dan tahunan berdasarkan gaji bruto. Cocok untuk simulasi cepat karyawan tetap.',
-    type: 'standard',
-    priceLabel: 'Gratis',
-    status: 'live',
-    href: '/calculators/pph21',
-  },
-  {
     id: 'pph21-ter-basic',
-    name: 'Kalkulator PPh 21 (TER)',
+    name: 'PPh21 TER — Simulasi Bulanan/Tahunan',
     description:
-      'Hitung estimasi PPh 21 bulanan dan tahunan berdasarkan gaji bruto. Cocok untuk simulasi cepat karyawan tetap.',
+      'Simulasi PPh 21 pegawai tetap dengan tarif efektif rata-rata (TER) untuk 1 periode perhitungan.',
     type: 'standard',
     priceLabel: 'Gratis',
     status: 'live',
     href: '/calculators/pph21-ter',
   },
   {
-    id: 'individual-advanced',
-    name: 'Kalkulator Pajak Perorangan (Advanced)',
+    id: 'pph21-ter-split',
+    name: 'PPh21 TER — Gaji & Bonus/THR (2x Potong)',
     description:
-      'Perhitungan pajak penghasilan perorangan yang lebih kompleks, termasuk berbagai sumber penghasilan.',
-    type: 'advanced',
-    priceLabel: 'Berbayar (via QRIS)',
-    status: 'coming-soon',
-  },
-  {
-    id: 'corporate-advanced',
-    name: 'Kalkulator Pajak Badan Usaha (Advanced)',
-    description:
-      'Simulasi kewajiban pajak badan untuk UMKM hingga perusahaan besar dengan aturan yang lebih lengkap.',
-    type: 'advanced',
-    priceLabel: 'Berbayar (via QRIS)',
-    status: 'coming-soon',
-  },
-  {
-    id: 'professional-advanced',
-    name: 'Kalkulator Pajak Profesional (Advanced)',
-    description:
-      'Dirancang untuk profesi tertentu (konsultan, kreator, freelancer) dengan skema penghasilan yang bervariasi.',
-    type: 'advanced',
-    priceLabel: 'Berbayar (via QRIS)',
-    status: 'coming-soon',
+      'Hitung PPh21 saat pembayaran gaji dan saat pembayaran bonus/THR dalam bulan yang sama, lengkap dengan rekap potong pajak per pembayaran.',
+    type: 'standard',
+    priceLabel: 'Gratis',
+    status: 'live',
+    href: '/calculators/pph21-ter-split',
   },
 ];
+
 
 type PageProps = {
   params: {
