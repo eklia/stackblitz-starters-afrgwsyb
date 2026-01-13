@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { Lang } from '@/lib/types';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
-import { buildLangHref } from '@/lib/utils'; 
+import { buildLangHref } from '@/lib/utils';
 import { getTranslations } from '@/lib/i18n';
 
 type Props = {
@@ -17,8 +17,9 @@ export function Navbar({ lang }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const t = getTranslations(lang); 
-  const nav = t.nav;                 
+  const t = getTranslations(lang);
+  const nav = t.nav;
+  const isEn = lang === 'en';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -48,25 +49,25 @@ export function Navbar({ lang }: Props) {
         {/* Menu desktop */}
         <div className="hidden items-center gap-6 md:flex">
           <Link
-            href={buildLangHref(lang ,`#beranda`)}
+            href={buildLangHref(lang, '#beranda')}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
             {nav.home}
           </Link>
           <Link
-            href={buildLangHref(lang ,`#layanan`)}
+            href={buildLangHref(lang, '#layanan')}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
             {nav.services}
           </Link>
           <Link
-            href={buildLangHref(lang ,`#tentang`)}
+            href={buildLangHref(lang, '#tentang')}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
             {nav.about}
           </Link>
           <Link
-            href={buildLangHref(lang ,`#faq`)}
+            href={buildLangHref(lang, '#faq')}
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
           >
             {nav.faq}
@@ -74,15 +75,25 @@ export function Navbar({ lang }: Props) {
 
           <LanguageSwitcher lang={lang} />
 
+          {/* CTA: permintaan konsultasi manual */}
           <Link
-            href={buildLangHref(lang ,`/request`)}
+            href={buildLangHref(lang, '/request')}
             className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
           >
             {nav.freeConsult}
           </Link>
 
+          {/* CTA: wizard konsultasi (chat-like) */}
           <Link
-            href={buildLangHref(lang ,`/calculators`)}
+            href={buildLangHref(lang, '/consultation')}
+            className="rounded-full border border-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-lg shadow-emerald-500/10 hover:bg-emerald-50"
+          >
+            {isEn ? 'Tax Q&A Wizard' : 'Wizard Konsultasi Pajak'}
+          </Link>
+
+          {/* CTA: kalkulator */}
+          <Link
+            href={buildLangHref(lang, '/calculators')}
             className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
           >
             {nav.tryCalculator}
@@ -127,44 +138,55 @@ export function Navbar({ lang }: Props) {
         <div className="border-t border-emerald-100 bg-white/95 backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 text-sm">
             <Link
-              href="#beranda"
+              href={buildLangHref(lang, '#beranda')}
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
               {nav.home}
             </Link>
             <Link
-              href="#layanan"
+              href={buildLangHref(lang, '#layanan')}
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
               {nav.services}
             </Link>
             <Link
-              href="#tentang"
+              href={buildLangHref(lang, '#tentang')}
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
               {nav.about}
             </Link>
             <Link
-              href="#faq"
+              href={buildLangHref(lang, '#faq')}
               className="py-1 text-slate-700"
               onClick={() => setOpen(false)}
             >
               {nav.faq}
             </Link>
 
+            {/* tombol konsultasi manual */}
             <Link
-              href={buildLangHref(lang ,`/request`)}
+              href={buildLangHref(lang, '/request')}
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
             >
               {nav.freeConsult}
             </Link>
 
+            {/* tombol wizard konsultasi */}
             <Link
-              href={buildLangHref(lang ,`/calculators/pph21-ter`)}
+              href={buildLangHref(lang, '/consultation')}
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex items-center justify-center rounded-full border border-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-lg shadow-emerald-500/10 hover:bg-emerald-50"
+            >
+              {isEn ? 'Tax Q&A Wizard' : 'Wizard Konsultasi Pajak'}
+            </Link>
+
+            {/* tombol kalkulator */}
+            <Link
+              href={buildLangHref(lang, '/calculators')}
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/30 hover:bg-emerald-800"
             >
