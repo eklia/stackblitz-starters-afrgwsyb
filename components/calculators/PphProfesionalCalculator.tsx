@@ -81,9 +81,7 @@ export function PphProfesionalCalculator({ lang }: Props) {
     switch (currentStep) {
       case 1: {
         if (!form.nama.trim()) {
-          return isEn
-            ? 'Name is required.'
-            : 'Nama wajib diisi.';
+          return isEn ? 'Name is required.' : 'Nama wajib diisi.';
         }
         if (!form.jenisKelamin) {
           return isEn
@@ -92,39 +90,53 @@ export function PphProfesionalCalculator({ lang }: Props) {
         }
         return null;
       }
+
       case 2: {
-        if (!form.statusPtkp) {
+        const { statusPtkp, hasNpwp, hasLegalEntity, hasBookkeeping, jobType } =
+          form;
+
+        if (!statusPtkp) {
           return isEn
             ? 'PTKP status must be selected.'
             : 'Status PTKP wajib dipilih.';
         }
-        if (!form.hasNpwp) {
+
+        if (!hasNpwp) {
           return isEn
             ? 'Please specify whether you have a TIN (NPWP).'
             : 'Harap pilih apakah memiliki NPWP atau tidak.';
         }
-        if (!form.hasLegalEntity) {
+
+        // Pastikan user sudah pilih YA/TIDAK dulu
+        if (hasLegalEntity !== 'YA' && hasLegalEntity !== 'TIDAK') {
           return isEn
             ? 'Please specify whether you have a legal entity (PT/CV).'
             : 'Harap pilih apakah memiliki badan hukum (PT/CV) atau tidak.';
         }
-        if (form.hasLegalEntity === 'YA') {
+
+        // Kalau YA → langsung info bahwa kalkulator ini bukan untuk PT/CV
+        if (hasLegalEntity === 'YA') {
           return isEn
             ? 'This calculator is intended for individuals without a legal entity. Please use the Corporate Income Tax calculator for PT/CV.'
             : 'Kalkulator ini hanya untuk profesional/freelancer tanpa badan hukum. Silakan gunakan kalkulator PPh Badan untuk PT/CV.';
         }
-        if (!form.hasBookkeeping) {
+
+        // Di titik ini, hasLegalEntity pasti "TIDAK"
+        if (hasBookkeeping !== 'YA' && hasBookkeeping !== 'TIDAK') {
           return isEn
             ? 'Please specify whether you have complete bookkeeping.'
             : 'Harap pilih apakah memiliki pembukuan lengkap atau tidak.';
         }
-        if (!form.jobType) {
+
+        if (!jobType) {
           return isEn
             ? 'Please select your type of profession/work.'
             : 'Harap pilih jenis pekerjaan/profesi.';
         }
+
         return null;
       }
+
       case 3: {
         const omzet = parseNumber(form.omzetSetahun);
         if (!form.omzetSetahun || omzet <= 0) {
@@ -132,6 +144,7 @@ export function PphProfesionalCalculator({ lang }: Props) {
             ? 'Annual revenue (turnover) must be filled and greater than 0.'
             : 'Omzet / pendapatan setahun wajib diisi dan lebih dari 0.';
         }
+
         if (form.hasBookkeeping === 'YA') {
           const biaya = parseNumber(form.biayaSetahun);
           if (!form.biayaSetahun) {
@@ -147,6 +160,7 @@ export function PphProfesionalCalculator({ lang }: Props) {
         }
         return null;
       }
+
       default:
         return null;
     }
@@ -179,14 +193,20 @@ export function PphProfesionalCalculator({ lang }: Props) {
     e.preventDefault();
     setError(null);
     setResult(null);
-
+  
     const err = validateAllSteps();
     if (err) {
       setError(err);
       return;
     }
-
-    if (form.hasLegalEntity === 'YA') {
+  
+    // 👉 Hitung dulu flag boolean YA / TIDAK di sini,
+    //    sebelum ada branch/narrowing aneh-aneh
+    const usesLegalEntity = form.hasLegalEntity === 'YA';
+    const usesBookkeeping = form.hasBookkeeping === 'YA';
+  
+    // Kalau pakai PT/CV, stop di sini
+    if (usesLegalEntity) {
       setError(
         isEn
           ? 'This calculator is for individuals without a legal entity. Please use the Corporate Income Tax calculator.'
@@ -194,25 +214,25 @@ export function PphProfesionalCalculator({ lang }: Props) {
       );
       return;
     }
-
+  
     const input = {
       nama: form.nama.trim(),
       jenisKelamin: form.jenisKelamin as JenisKelamin,
       statusPtkp: form.statusPtkp as PtkpStatus,
       hasNpwp: form.hasNpwp === 'YA',
-
-      hasLegalEntity: form.hasLegalEntity === 'YA',
-      hasBookkeeping: form.hasBookkeeping === 'YA',
-
+  
+      // 👉 Pakai flag boolean yang sudah dihitung
+      hasLegalEntity: usesLegalEntity,
+      hasBookkeeping: usesBookkeeping,
+  
       jobType: form.jobType as FreelancerJobType,
-
+  
       omzetSetahun: parseNumber(form.omzetSetahun),
-      biayaSetahun:
-        form.hasBookkeeping === 'YA'
-          ? parseNumber(form.biayaSetahun)
-          : undefined,
+      biayaSetahun: usesBookkeeping
+        ? parseNumber(form.biayaSetahun)
+        : undefined,
     };
-
+  
     setIsSubmitting(true);
     try {
       const res = computePphProfesional(input);
@@ -238,7 +258,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100">
-              {isEn ? 'Freelancer Tax Calculator' : 'Kalkulator Pajak Profesional / Freelancer'}
+              {isEn
+                ? 'Freelancer Tax Calculator'
+                : 'Kalkulator Pajak Profesional / Freelancer'}
             </p>
             <h1 className="mt-1 text-lg font-semibold md:text-2xl">
               {isEn
@@ -259,7 +281,8 @@ export function PphProfesionalCalculator({ lang }: Props) {
                 : 'Versi simulasi — bukan perhitungan pajak resmi'}
             </span>
             <span className="text-emerald-100/80">
-              {isEn ? 'Step' : 'Langkah'} {step} {isEn ? 'of' : 'dari'} {MAX_STEP}
+              {isEn ? 'Step' : 'Langkah'} {step} {isEn ? 'of' : 'dari'}{' '}
+              {MAX_STEP}
             </span>
           </div>
         </div>
@@ -289,23 +312,33 @@ export function PphProfesionalCalculator({ lang }: Props) {
                   value={form.nama}
                   onChange={(e) => handleChange('nama', e.target.value)}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  placeholder={isEn ? 'Example: Andi Pratama' : 'Contoh: Andi Pratama'}
+                  placeholder={
+                    isEn ? 'Example: Andi Pratama' : 'Contoh: Andi Pratama'
+                  }
                   required
                 />
               </div>
               <div>
-                <Label required>{isEn ? 'Gender' : 'Jenis Kelamin'}</Label>
+                <Label required>
+                  {isEn ? 'Gender' : 'Jenis Kelamin'}
+                </Label>
                 <select
                   value={form.jenisKelamin}
-                  onChange={(e) => handleChange('jenisKelamin', e.target.value)}
+                  onChange={(e) =>
+                    handleChange('jenisKelamin', e.target.value)
+                  }
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   required
                 >
                   <option value="">
                     {isEn ? 'Select gender' : 'Pilih jenis kelamin'}
                   </option>
-                  <option value="L">{isEn ? 'Male' : 'Laki-laki'}</option>
-                  <option value="P">{isEn ? 'Female' : 'Perempuan'}</option>
+                  <option value="L">
+                    {isEn ? 'Male' : 'Laki-laki'}
+                  </option>
+                  <option value="P">
+                    {isEn ? 'Female' : 'Perempuan'}
+                  </option>
                 </select>
               </div>
             </div>
@@ -329,10 +362,16 @@ export function PphProfesionalCalculator({ lang }: Props) {
           >
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label required>{isEn ? 'PTKP Status' : 'Status Perkawinan / Tanggungan (PTKP)'}</Label>
+                <Label required>
+                  {isEn
+                    ? 'PTKP Status'
+                    : 'Status Perkawinan / Tanggungan (PTKP)'}
+                </Label>
                 <select
                   value={form.statusPtkp}
-                  onChange={(e) => handleChange('statusPtkp', e.target.value)}
+                  onChange={(e) =>
+                    handleChange('statusPtkp', e.target.value)
+                  }
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   required
                 >
@@ -351,7 +390,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
               </div>
 
               <div>
-                <Label required>{isEn ? 'Do you have NPWP?' : 'Memiliki NPWP?'}</Label>
+                <Label required>
+                  {isEn ? 'Do you have NPWP?' : 'Memiliki NPWP?'}
+                </Label>
                 <div className="mt-1 flex gap-3">
                   {['YA', 'TIDAK'].map((opt) => (
                     <button
@@ -456,29 +497,48 @@ export function PphProfesionalCalculator({ lang }: Props) {
 
               <div className="md:col-span-2">
                 <Label required>
-                  {isEn ? 'Type of Profession / Work' : 'Jenis Pekerjaan / Profesi'}
+                  {isEn
+                    ? 'Type of Profession / Work'
+                    : 'Jenis Pekerjaan / Profesi'}
                 </Label>
                 <select
                   value={form.jobType}
                   onChange={(e) =>
-                    handleChange('jobType', e.target.value as FreelancerJobType)
+                    handleChange(
+                      'jobType',
+                      e.target.value as FreelancerJobType
+                    )
                   }
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   required
                 >
                   <option value="">
-                    {isEn ? 'Select profession' : 'Pilih jenis pekerjaan/profesi'}
+                    {isEn
+                      ? 'Select profession'
+                      : 'Pilih jenis pekerjaan/profesi'}
                   </option>
                   <option value="DOKTER">Dokter</option>
-                  <option value="TENAGA_MEDIS_LAINNYA">Tenaga Medis Lainnya</option>
+                  <option value="TENAGA_MEDIS_LAINNYA">
+                    Tenaga Medis Lainnya
+                  </option>
                   <option value="PSIKOLOG">Psikolog</option>
-                  <option value="PENGACARA_NOTARIS">Pengacara / Notaris</option>
-                  <option value="PROFESI_HUKUM_LAINNYA">Profesi Hukum Lainnya</option>
-                  <option value="KONSULTAN_KEUANGAN">Konsultan Keuangan</option>
-                  <option value="PROFESI_PENDIDIKAN">Profesi Pendidikan</option>
+                  <option value="PENGACARA_NOTARIS">
+                    Pengacara / Notaris
+                  </option>
+                  <option value="PROFESI_HUKUM_LAINNYA">
+                    Profesi Hukum Lainnya
+                  </option>
+                  <option value="KONSULTAN_KEUANGAN">
+                    Konsultan Keuangan
+                  </option>
+                  <option value="PROFESI_PENDIDIKAN">
+                    Profesi Pendidikan
+                  </option>
                   <option value="PEKERJA_SENI">Pekerja Seni</option>
                   <option value="PEDAGANG">Pedagang</option>
-                  <option value="JASA_NON_PROFESIONAL">Jasa Non-Profesional</option>
+                  <option value="JASA_NON_PROFESIONAL">
+                    Jasa Non-Profesional
+                  </option>
                   <option value="LAINNYA">Lainnya</option>
                 </select>
                 <p className="mt-1 text-[11px] text-slate-500">
@@ -509,7 +569,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label required>
-                  {isEn ? 'Total Revenue in a Year (Rp)' : 'Total Pendapatan / Omzet Setahun (Rp)'}
+                  {isEn
+                    ? 'Total Revenue in a Year (Rp)'
+                    : 'Total Pendapatan / Omzet Setahun (Rp)'}
                 </Label>
                 <div className="relative">
                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[11px] text-slate-400">
@@ -520,7 +582,10 @@ export function PphProfesionalCalculator({ lang }: Props) {
                     inputMode="numeric"
                     value={form.omzetSetahun}
                     onChange={(e) =>
-                      handleChange('omzetSetahun', formatCurrencyInput(e.target.value))
+                      handleChange(
+                        'omzetSetahun',
+                        formatCurrencyInput(e.target.value)
+                      )
                     }
                     className="mt-1 w-full rounded-lg border border-slate-200 px-8 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                     placeholder="0"
@@ -532,7 +597,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
               {form.hasBookkeeping === 'YA' && (
                 <div>
                   <Label required>
-                    {isEn ? 'Total Expenses in a Year (Rp)' : 'Total Biaya Setahun (Rp)'}
+                    {isEn
+                      ? 'Total Expenses in a Year (Rp)'
+                      : 'Total Biaya Setahun (Rp)'}
                   </Label>
                   <div className="relative">
                     <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[11px] text-slate-400">
@@ -569,9 +636,7 @@ export function PphProfesionalCalculator({ lang }: Props) {
           <SectionCard
             step={step}
             title={
-              isEn
-                ? 'Estimated Tax Result'
-                : 'Hasil Estimasi Pajak'
+              isEn ? 'Estimated Tax Result' : 'Hasil Estimasi Pajak'
             }
             description={
               isEn
@@ -583,7 +648,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
               {/* HIGHLIGHT */}
               <div className="rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-3 text-emerald-50">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-100">
-                  {isEn ? 'Estimated Annual Tax' : 'Estimasi Pajak Tahunan'}
+                  {isEn
+                    ? 'Estimated Annual Tax'
+                    : 'Estimasi Pajak Tahunan'}
                 </p>
                 <p className="mt-1 text-xl font-semibold md:text-2xl">
                   Rp {result.pajakSetelahNpwp.toLocaleString('id-ID')}
@@ -614,7 +681,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
 
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2">
                   <p className="text-[11px] text-slate-500">
-                    {isEn ? 'Tax before NPWP adjustment' : 'Pajak sebelum penyesuaian NPWP'}
+                    {isEn
+                      ? 'Tax before NPWP adjustment'
+                      : 'Pajak sebelum penyesuaian NPWP'}
                   </p>
                   <p className="text-sm font-semibold text-emerald-800 md:text-base">
                     Rp {result.pajakSebelumNpwp.toLocaleString('id-ID')}
@@ -628,7 +697,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
                   <tbody>
                     <tr>
                       <td className="px-3 py-2 font-medium text-slate-600">
-                        {isEn ? 'Annual Revenue (Turnover)' : 'Omzet / Pendapatan Setahun'}
+                        {isEn
+                          ? 'Annual Revenue (Turnover)'
+                          : 'Omzet / Pendapatan Setahun'}
                       </td>
                       <td className="px-3 py-2 text-right text-slate-800">
                         Rp {result.omzetSetahun.toLocaleString('id-ID')}
@@ -637,7 +708,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
                     {result.metode === 'PEMBUKUAN' && (
                       <tr>
                         <td className="px-3 py-2 font-medium text-slate-600">
-                          {isEn ? 'Annual Expenses (Bookkeeping)' : 'Total Biaya Setahun (Pembukuan)'}
+                          {isEn
+                            ? 'Annual Expenses (Bookkeeping)'
+                            : 'Total Biaya Setahun (Pembukuan)'}
                         </td>
                         <td className="px-3 py-2 text-right text-slate-800">
                           Rp {result.biayaSetahun.toLocaleString('id-ID')}
@@ -647,10 +720,14 @@ export function PphProfesionalCalculator({ lang }: Props) {
                     {result.metode === 'NPPN' && (
                       <tr>
                         <td className="px-3 py-2 font-medium text-slate-600">
-                          {isEn ? 'NPPN Net Income' : 'Penghasilan Neto Menurut NPPN'}
+                          {isEn
+                            ? 'NPPN Net Income'
+                            : 'Penghasilan Neto Menurut NPPN'}
                         </td>
                         <td className="px-3 py-2 text-right text-slate-800">
-                          Rp {(result.netoNormatif ?? 0).toLocaleString('id-ID')}
+                          Rp {(result.netoNormatif ?? 0).toLocaleString(
+                            'id-ID'
+                          )}
                         </td>
                       </tr>
                     )}
@@ -664,7 +741,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
                     </tr>
                     <tr>
                       <td className="px-3 py-2 font-medium text-slate-600">
-                        {isEn ? 'Annual Taxable Income (PKP)' : 'Penghasilan Kena Pajak (PKP) Tahunan'}
+                        {isEn
+                          ? 'Annual Taxable Income (PKP)'
+                          : 'Penghasilan Kena Pajak (PKP) Tahunan'}
                       </td>
                       <td className="px-3 py-2 text-right text-slate-800">
                         Rp {result.pkp.toLocaleString('id-ID')}
@@ -672,7 +751,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
                     </tr>
                     <tr className="bg-emerald-50 font-semibold text-slate-900">
                       <td className="px-3 py-2">
-                        {isEn ? 'Estimated Tax Payable (Final)' : 'Estimasi PPh Terutang (Akhir)'}
+                        {isEn
+                          ? 'Estimated Tax Payable (Final)'
+                          : 'Estimasi PPh Terutang (Akhir)'}
                       </td>
                       <td className="px-3 py-2 text-right">
                         Rp {result.pajakSetelahNpwp.toLocaleString('id-ID')}
@@ -686,7 +767,9 @@ export function PphProfesionalCalculator({ lang }: Props) {
               {result.catatan.length > 0 && (
                 <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2">
                   <p className="text-[11px] font-medium text-slate-600">
-                    {isEn ? 'Calculation Notes:' : 'Catatan Perhitungan:'}
+                    {isEn
+                      ? 'Calculation Notes:'
+                      : 'Catatan Perhitungan:'}
                   </p>
                   <ul className="mt-1 list-disc space-y-1 pl-4 text-[11px] text-slate-600">
                     {result.catatan.map((note, idx) => (
