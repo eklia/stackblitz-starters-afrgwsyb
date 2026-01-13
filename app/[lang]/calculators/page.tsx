@@ -40,6 +40,17 @@ const calculators: CalculatorItem[] = [
     status: 'live',
     href: '/calculators/pph21-ter-split',
   },
+  {
+    id: 'pph-profesional',
+    name: 'Pajak Profesional / Freelancer',
+    description:
+      'Estimasi pajak penghasilan untuk pekerja bebas dan profesional, dengan pilihan pembukuan riil atau NPPN.',
+    type: 'standard',
+    priceLabel: 'Gratis',
+    status: 'live',
+    href: '/calculators/pph-profesional',
+  },
+  
 ];
 
 
