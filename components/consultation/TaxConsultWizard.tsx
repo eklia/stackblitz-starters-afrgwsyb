@@ -1,7 +1,7 @@
 // components/consultation/TaxConsultWizard.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -60,14 +60,21 @@ export function TaxConsultWizard({ lang }: Props) {
     null
   );
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ===================== BOT TYPING HELPER ===================== */
 
   function addBotMessage(text: string, delayMs = 600) {
+    // kalau ada timeout ketikan sebelumnya, bersihkan dulu
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  
     setIsBotTyping(true);
-    setTimeout(() => {
+    typingTimeoutRef.current = setTimeout(() => {
       setMessages((prev) => [...prev, { from: 'bot', text }]);
       setIsBotTyping(false);
+      typingTimeoutRef.current = null;
     }, delayMs);
   }
 
@@ -317,6 +324,14 @@ export function TaxConsultWizard({ lang }: Props) {
     handleRestart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEn]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const currentQuestionText =
     step === 'RESULT' ? null : getCurrentQuestion(step);
