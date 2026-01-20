@@ -1,7 +1,7 @@
 // components/consultation/TaxConsultWizard.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -55,23 +55,21 @@ export function TaxConsultWizard({ lang }: Props) {
 
   const [step, setStep] = useState<StepId>('Q_SUBJECT');
   const [answers, setAnswers] = useState<Answers>({});
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      from: 'bot',
-      text: isEn
-        ? 'Hi! I will ask a few simple questions to help you choose the most suitable tax calculator.'
-        : 'Halo! Saya akan bertanya beberapa hal sederhana untuk membantu memilih kalkulator pajak yang paling cocok.',
-    },
-    {
-      from: 'bot',
-      text: isEn
-        ? 'First, whose tax do you want to calculate?'
-        : 'Pertama, pajak yang ingin Anda hitung ini untuk siapa?',
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(
     null
   );
+  const [isBotTyping, setIsBotTyping] = useState(false);
+
+  /* ===================== BOT TYPING HELPER ===================== */
+
+  function addBotMessage(text: string, delayMs = 600) {
+    setIsBotTyping(true);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { from: 'bot', text }]);
+      setIsBotTyping(false);
+    }, delayMs);
+  }
 
   /* ===================== QUESTION & OPTIONS ===================== */
 
@@ -218,15 +216,10 @@ export function TaxConsultWizard({ lang }: Props) {
         setRecommendation(rec);
         setStep('RESULT');
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            from: 'bot',
-            text: isEn
-              ? 'Because this is for a business entity (PT/CV/company), the more appropriate path is Corporate Income Tax (PPh Badan).'
-              : 'Karena pajak yang ingin dihitung untuk badan usaha (PT/CV/perusahaan), jalur yang lebih tepat adalah PPh Badan.',
-          },
-        ]);
+        const text = isEn
+          ? 'Because this is for a business entity (PT/CV/company), the more appropriate path is Corporate Income Tax (PPh Badan).'
+          : 'Karena pajak yang ingin dihitung untuk badan usaha (PT/CV/perusahaan), jalur yang lebih tepat adalah PPh Badan.';
+        addBotMessage(text);
         return;
       }
 
@@ -234,13 +227,7 @@ export function TaxConsultWizard({ lang }: Props) {
       const nextQuestion = getCurrentQuestion('Q_PERSONAL_TYPE');
       setStep('Q_PERSONAL_TYPE');
       if (nextQuestion) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            from: 'bot',
-            text: nextQuestion,
-          },
-        ]);
+        addBotMessage(nextQuestion);
       }
       return;
     }
@@ -259,53 +246,49 @@ export function TaxConsultWizard({ lang }: Props) {
       setRecommendation(rec);
       setStep('RESULT');
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          from: 'bot',
-          text:
-            recKey === 'PPH21_TER'
-              ? isEn
-                ? 'Okay, it looks like you are an employee with a regular monthly salary. I recommend using the PPh21 TER calculator for permanent employees.'
-                : 'Baik, sepertinya Anda adalah pegawai dengan gaji bulanan rutin. Saya sarankan memakai kalkulator PPh21 TER untuk pegawai tetap.'
-              : recKey === 'PPH21_TER_SPLIT'
-              ? isEn
-                ? 'Because there is salary and a separate bonus/THR in the same month, it is better to use the PPh21 TER calculator that supports two separate withholdings (salary & bonus/THR).'
-                : 'Karena ada gaji dan pembayaran bonus/THR terpisah dalam bulan yang sama, lebih tepat menggunakan kalkulator PPh21 TER yang mendukung 2x potong (gaji & bonus/THR).'
-              : recKey === 'PPH_PROF'
-              ? isEn
-                ? 'Since your income comes from professional/freelance services, the Professional / Freelancer tax calculator will be more suitable.'
-                : 'Karena penghasilan Anda berasal dari jasa profesional / freelance, kalkulator pajak Profesional / Freelancer akan lebih sesuai.'
-              : isEn
-              ? 'Your situation may not match a single simple pattern. I will still show you some calculator options that may be useful as a starting point.'
-              : 'Situasi Anda tampaknya tidak persis cocok dengan satu pola sederhana. Saya tetap akan menampilkan beberapa opsi kalkulator yang bisa dipakai sebagai titik awal.',
-        },
-      ]);
+      const text =
+        recKey === 'PPH21_TER'
+          ? isEn
+            ? 'Okay, it looks like you are an employee with a regular monthly salary. I recommend using the PPh21 TER calculator for permanent employees.'
+            : 'Baik, sepertinya Anda adalah pegawai dengan gaji bulanan rutin. Saya sarankan memakai kalkulator PPh21 TER untuk pegawai tetap.'
+          : recKey === 'PPH21_TER_SPLIT'
+          ? isEn
+            ? 'Because there is salary and a separate bonus/THR in the same month, it is better to use the PPh21 TER calculator that supports two separate withholdings (salary & bonus/THR).'
+            : 'Karena ada gaji dan pembayaran bonus/THR terpisah dalam bulan yang sama, lebih tepat menggunakan kalkulator PPh21 TER yang mendukung 2x potong (gaji & bonus/THR).'
+          : recKey === 'PPH_PROF'
+          ? isEn
+            ? 'Since your income comes from professional/freelance services, the Professional / Freelancer tax calculator will be more suitable.'
+            : 'Karena penghasilan Anda berasal dari jasa profesional / freelance, kalkulator pajak Profesional / Freelancer akan lebih sesuai.'
+          : isEn
+          ? 'Your situation may not match a single simple pattern. I will still show you some calculator options that may be useful as a starting point.'
+          : 'Situasi Anda tampaknya tidak persis cocok dengan satu pola sederhana. Saya tetap akan menampilkan beberapa opsi kalkulator yang bisa dipakai sebagai titik awal.';
+
+      addBotMessage(text);
     }
   }
 
   function handleRestart() {
+    const intro1 = isEn
+      ? 'Hi! I will ask a few simple questions to help you choose the most suitable tax calculator.'
+      : 'Halo! Saya akan bertanya beberapa hal sederhana untuk membantu memilih kalkulator pajak yang paling cocok.';
+    const intro2 = isEn
+      ? 'First, whose tax do you want to calculate?'
+      : 'Pertama, pajak yang ingin Anda hitung ini untuk siapa?';
+  
     setStep('Q_SUBJECT');
     setAnswers({});
     setRecommendation(null);
-    setMessages([
-      {
-        from: 'bot',
-        text: isEn
-          ? 'Hi! I will ask a few simple questions to help you choose the most suitable tax calculator.'
-          : 'Halo! Saya akan bertanya beberapa hal sederhana untuk membantu memilih kalkulator pajak yang paling cocok.',
-      },
-      {
-        from: 'bot',
-        text: isEn
-          ? 'First, whose tax do you want to calculate?'
-          : 'Pertama, pajak yang ingin Anda hitung ini untuk siapa?',
-      },
-    ]);
+    setIsBotTyping(false);
+  
+    // Hanya greeting dulu di chat
+    setMessages([{ from: 'bot', text: intro1 }]);
+  
+    // Pertanyaan muncul setelah animasi "lagi ngetik"
+    addBotMessage(intro2, 700);
   }
+  
 
   function handleBack() {
-    // UX mirip tombol "Back" → mundur satu level kalau bisa
     if (step === 'RESULT') {
       if (answers.personalType) {
         setStep('Q_PERSONAL_TYPE');
@@ -326,22 +309,26 @@ export function TaxConsultWizard({ lang }: Props) {
       return;
     }
 
-    // kalau di step pertama, back = reset
     handleRestart();
   }
+
+  useEffect(() => {
+    // mulai percakapan pertama kali / ketika bahasa diganti
+    handleRestart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEn]);
 
   const currentQuestionText =
     step === 'RESULT' ? null : getCurrentQuestion(step);
   const currentOptions =
     step === 'RESULT' ? [] : getOptions(step, answers);
-
   const canGoBack = step !== 'Q_SUBJECT';
 
   /* ===================== RENDER ===================== */
 
   return (
     <div className="mx-auto max-w-4xl space-y-4 md:space-y-6">
-      {/* HEADER (tetap hijau seperti gaya CekPajak) */}
+      {/* HEADER */}
       <header className="rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 p-5 text-slate-50 shadow-soft md:p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -370,7 +357,7 @@ export function TaxConsultWizard({ lang }: Props) {
         </div>
       </header>
 
-      {/* WRAPPER ala "card besar di tengah" */}
+      {/* WRAPPER ala card besar */}
       <section className="rounded-3xl bg-emerald-50/80 p-3 shadow-inner md:p-4">
         {/* New Inquiry */}
         <div className="mb-3 flex justify-start">
@@ -384,7 +371,7 @@ export function TaxConsultWizard({ lang }: Props) {
           </button>
         </div>
 
-        {/* Chat card utama */}
+        {/* Card utama */}
         <div className="flex min-h-[420px] flex-col rounded-3xl bg-white p-4 shadow-soft ring-1 ring-emerald-100 md:p-5">
           {/* CHAT AREA */}
           <div className="flex-1 space-y-3 overflow-y-auto rounded-2xl bg-emerald-50/60 p-3">
@@ -408,11 +395,21 @@ export function TaxConsultWizard({ lang }: Props) {
                 </div>
               </div>
             ))}
+
+            {/* Typing indicator */}
+            {isBotTyping && (
+              <div className="mt-1 flex justify-start">
+                <div className="inline-flex items-center gap-1 rounded-2xl bg-white px-3 py-2 text-[11px] text-slate-500 shadow-sm ring-1 ring-emerald-50">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* BOTTOM AREA: QUESTION & OPTIONS / RECOMMENDATION */}
+          {/* BOTTOM AREA */}
           <div className="mt-4 border-t border-slate-100 pt-3">
-            {/* Baris atas: Back + judul pertanyaan */}
             <div className="mb-2 flex items-center justify-between gap-2">
               <div>
                 {canGoBack && (
@@ -437,7 +434,9 @@ export function TaxConsultWizard({ lang }: Props) {
             {currentOptions.length > 0 && (
               <div className="space-y-2">
                 <p className="text-center text-[11px] text-slate-500">
-                  {isEn ? 'Choose one answer below:' : 'Pilih salah satu jawaban di bawah ini:'}
+                  {isEn
+                    ? 'Choose one answer below:'
+                    : 'Pilih salah satu jawaban di bawah ini:'}
                 </p>
                 <div className="mt-1 flex flex-wrap justify-center gap-2">
                   {currentOptions.map((opt) => (
@@ -454,7 +453,7 @@ export function TaxConsultWizard({ lang }: Props) {
               </div>
             )}
 
-            {/* RECOMMENDATION CARD */}
+            {/* RECOMMENDATION */}
             {step === 'RESULT' && recommendation && (
               <div className="mt-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
