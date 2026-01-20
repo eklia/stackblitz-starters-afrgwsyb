@@ -73,7 +73,8 @@ export function TaxConsultWizard({ lang }: Props) {
     null
   );
 
-  // ====== HELPER: GET QUESTION TEXT & OPTIONS ======
+  /* ===================== QUESTION & OPTIONS ===================== */
+
   function getCurrentQuestion(step: StepId): string | null {
     if (step === 'Q_SUBJECT') {
       return isEn
@@ -138,7 +139,8 @@ export function TaxConsultWizard({ lang }: Props) {
     return [];
   }
 
-  // ====== HELPER: BUILD RECOMMENDATION OBJ ======
+  /* ===================== RECOMMENDATION ===================== */
+
   function buildRecommendation(key: RecommendationKey): Recommendation {
     switch (key) {
       case 'PPH21_TER':
@@ -200,9 +202,10 @@ export function TaxConsultWizard({ lang }: Props) {
     }
   }
 
-  // ====== HANDLE ANSWERS ======
+  /* ===================== FLOW HANDLERS ===================== */
+
   function handleOptionClick(option: ChatOption) {
-    // 1. Tambah pesan user
+    // Tambah pesan user ke chat
     setMessages((prev) => [...prev, { from: 'user', text: option.label }]);
 
     if (step === 'Q_SUBJECT') {
@@ -227,7 +230,7 @@ export function TaxConsultWizard({ lang }: Props) {
         return;
       }
 
-      // Kalau PRIBADI -> lanjut ke pertanyaan tipe penghasilan
+      // PRIBADI → lanjut
       const nextQuestion = getCurrentQuestion('Q_PERSONAL_TYPE');
       setStep('Q_PERSONAL_TYPE');
       if (nextQuestion) {
@@ -248,16 +251,9 @@ export function TaxConsultWizard({ lang }: Props) {
       setAnswers(newAnswers);
 
       let recKey: RecommendationKey = 'UNKNOWN';
-
-      if (personalType === 'EMPLOYEE_GAJI') {
-        recKey = 'PPH21_TER';
-      } else if (personalType === 'EMPLOYEE_GAJI_BONUS') {
-        recKey = 'PPH21_TER_SPLIT';
-      } else if (personalType === 'FREELANCER') {
-        recKey = 'PPH_PROF';
-      } else {
-        recKey = 'UNKNOWN';
-      }
+      if (personalType === 'EMPLOYEE_GAJI') recKey = 'PPH21_TER';
+      else if (personalType === 'EMPLOYEE_GAJI_BONUS') recKey = 'PPH21_TER_SPLIT';
+      else if (personalType === 'FREELANCER') recKey = 'PPH_PROF';
 
       const rec = buildRecommendation(recKey);
       setRecommendation(rec);
@@ -285,8 +281,6 @@ export function TaxConsultWizard({ lang }: Props) {
               : 'Situasi Anda tampaknya tidak persis cocok dengan satu pola sederhana. Saya tetap akan menampilkan beberapa opsi kalkulator yang bisa dipakai sebagai titik awal.',
         },
       ]);
-
-      return;
     }
   }
 
@@ -310,13 +304,44 @@ export function TaxConsultWizard({ lang }: Props) {
     ]);
   }
 
+  function handleBack() {
+    // UX mirip tombol "Back" → mundur satu level kalau bisa
+    if (step === 'RESULT') {
+      if (answers.personalType) {
+        setStep('Q_PERSONAL_TYPE');
+        setRecommendation(null);
+      } else if (answers.subject) {
+        setStep('Q_SUBJECT');
+        setRecommendation(null);
+      } else {
+        handleRestart();
+      }
+      return;
+    }
+
+    if (step === 'Q_PERSONAL_TYPE') {
+      setStep('Q_SUBJECT');
+      setAnswers((prev) => ({ subject: prev.subject }));
+      setRecommendation(null);
+      return;
+    }
+
+    // kalau di step pertama, back = reset
+    handleRestart();
+  }
+
+  const currentQuestionText =
+    step === 'RESULT' ? null : getCurrentQuestion(step);
   const currentOptions =
     step === 'RESULT' ? [] : getOptions(step, answers);
 
-  // ====== RENDER ======
+  const canGoBack = step !== 'Q_SUBJECT';
+
+  /* ===================== RENDER ===================== */
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
-      {/* HEADER */}
+    <div className="mx-auto max-w-4xl space-y-4 md:space-y-6">
+      {/* HEADER (tetap hijau seperti gaya CekPajak) */}
       <header className="rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 p-5 text-slate-50 shadow-soft md:p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -345,108 +370,149 @@ export function TaxConsultWizard({ lang }: Props) {
         </div>
       </header>
 
-      {/* CHAT CARD */}
-      <div className="space-y-4 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-emerald-50 md:p-5">
-        {/* CHAT AREA */}
-        <div className="max-h-[480px] space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-100 p-3">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                'flex',
-                msg.from === 'bot' ? 'justify-start' : 'justify-end'
-              )}
-            >
-              <div
-                className={cn(
-                  'max-w-[80%] rounded-2xl px-3 py-2 text-[11px] md:text-xs',
-                  msg.from === 'bot'
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'bg-emerald-600 text-emerald-50'
-                )}
-              >
-                {msg.text}
-              </div>
-            </div>
-          ))}
+      {/* WRAPPER ala "card besar di tengah" */}
+      <section className="rounded-3xl bg-emerald-50/80 p-3 shadow-inner md:p-4">
+        {/* New Inquiry */}
+        <div className="mb-3 flex justify-start">
+          <button
+            type="button"
+            onClick={handleRestart}
+            className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-medium text-emerald-700 shadow-sm ring-1 ring-emerald-100 hover:bg-emerald-50"
+          >
+            <span aria-hidden="true">↺</span>
+            {isEn ? 'New Inquiry' : 'Konsultasi baru'}
+          </button>
         </div>
 
-        {/* OPTIONS / ACTIONS */}
-        {currentOptions.length > 0 && (
-          <div className="mt-2 space-y-2">
-            <p className="text-[11px] font-medium text-slate-700">
-              {isEn ? 'Choose one answer:' : 'Pilih salah satu jawaban:'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {currentOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => handleOptionClick(opt)}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-700 shadow-sm hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-800"
+        {/* Chat card utama */}
+        <div className="flex min-h-[420px] flex-col rounded-3xl bg-white p-4 shadow-soft ring-1 ring-emerald-100 md:p-5">
+          {/* CHAT AREA */}
+          <div className="flex-1 space-y-3 overflow-y-auto rounded-2xl bg-emerald-50/60 p-3">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'flex',
+                  msg.from === 'bot' ? 'justify-start' : 'justify-end'
+                )}
+              >
+                <div
+                  className={cn(
+                    'max-w-[80%] rounded-2xl px-3 py-2 text-[11px] md:text-xs',
+                    msg.from === 'bot'
+                      ? 'bg-white text-slate-800 shadow-sm ring-1 ring-emerald-50'
+                      : 'bg-emerald-600 text-emerald-50 shadow-sm'
+                  )}
                 >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* RECOMMENDATION CARD */}
-        {step === 'RESULT' && recommendation && (
-          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-              {isEn ? 'Recommended next step' : 'Rekomendasi langkah berikutnya'}
-            </p>
-            <h2 className="mt-1 text-sm font-semibold text-emerald-900 md:text-base">
-              {recommendation.title}
-            </h2>
-            <p className="mt-1 text-[11px] text-slate-700">
-              {recommendation.description}
-            </p>
-
-            {recommendation.href ? (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  size="md"
-                  onClick={() => router.push(recommendation.href!)}
-                >
-                  {isEn
-                    ? 'Open recommended calculator'
-                    : 'Buka kalkulator yang disarankan'}
-                </Button>
-                <button
-                  type="button"
-                  onClick={handleRestart}
-                  className="text-[11px] text-slate-500 underline-offset-2 hover:text-emerald-700 hover:underline"
-                >
-                  {isEn
-                    ? 'Start a new consultation'
-                    : 'Mulai konsultasi baru'}
-                </button>
+                  {msg.text}
+                </div>
               </div>
-            ) : (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <p className="text-[11px] text-amber-700">
-                  {isEn
-                    ? 'We do not yet have a specific calculator for this case. Please consult a tax advisor or use other calculators as approximation.'
-                    : 'Saat ini belum tersedia kalkulator khusus untuk kasus ini. Silakan konsultasi dengan konsultan pajak atau gunakan kalkulator lain sebagai pendekatan.'}
+            ))}
+          </div>
+
+          {/* BOTTOM AREA: QUESTION & OPTIONS / RECOMMENDATION */}
+          <div className="mt-4 border-t border-slate-100 pt-3">
+            {/* Baris atas: Back + judul pertanyaan */}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div>
+                {canGoBack && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-700"
+                  >
+                    <span aria-hidden="true">←</span>
+                    {isEn ? 'Back' : 'Kembali'}
+                  </button>
+                )}
+              </div>
+              {currentQuestionText && step !== 'RESULT' && (
+                <p className="flex-1 text-center text-[11px] font-semibold text-slate-800 md:text-xs">
+                  {currentQuestionText}
                 </p>
-                <button
-                  type="button"
-                  onClick={handleRestart}
-                  className="text-[11px] text-slate-500 underline-offset-2 hover:text-emerald-700 hover:underline"
-                >
+              )}
+            </div>
+
+            {/* OPTIONS */}
+            {currentOptions.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-center text-[11px] text-slate-500">
+                  {isEn ? 'Choose one answer below:' : 'Pilih salah satu jawaban di bawah ini:'}
+                </p>
+                <div className="mt-1 flex flex-wrap justify-center gap-2">
+                  {currentOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleOptionClick(opt)}
+                      className="rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-[11px] text-slate-700 shadow-sm hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-800"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RECOMMENDATION CARD */}
+            {step === 'RESULT' && recommendation && (
+              <div className="mt-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
                   {isEn
-                    ? 'Start a new consultation'
-                    : 'Mulai konsultasi baru'}
-                </button>
+                    ? 'Recommended next step'
+                    : 'Rekomendasi langkah berikutnya'}
+                </p>
+                <h2 className="mt-1 text-sm font-semibold text-emerald-900 md:text-base">
+                  {recommendation.title}
+                </h2>
+                <p className="mt-1 text-[11px] text-slate-700">
+                  {recommendation.description}
+                </p>
+
+                {recommendation.href ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      size="md"
+                      onClick={() => router.push(recommendation.href!)}
+                    >
+                      {isEn
+                        ? 'Open recommended calculator'
+                        : 'Buka kalkulator yang disarankan'}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={handleRestart}
+                      className="text-[11px] text-slate-500 underline-offset-2 hover:text-emerald-700 hover:underline"
+                    >
+                      {isEn
+                        ? 'Start a new consultation'
+                        : 'Mulai konsultasi baru'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <p className="text-[11px] text-amber-700">
+                      {isEn
+                        ? 'We do not yet have a specific calculator for this case. Please consult a tax advisor or use other calculators as approximation.'
+                        : 'Saat ini belum tersedia kalkulator khusus untuk kasus ini. Silakan konsultasi dengan konsultan pajak atau gunakan kalkulator lain sebagai pendekatan.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleRestart}
+                      className="text-[11px] text-slate-500 underline-offset-2 hover:text-emerald-700 hover:underline"
+                    >
+                      {isEn
+                        ? 'Start a new consultation'
+                        : 'Mulai konsultasi baru'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
       {/* CATATAN KECIL */}
       <p className="text-[10px] text-slate-500">
