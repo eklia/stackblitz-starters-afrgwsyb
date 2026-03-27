@@ -2,6 +2,8 @@
 import { Lang } from './types';
 
 type HeroPromo = {
+  imageSrc: string;
+  imageAlt: string;
   badge: string;
   title: string;
   subtitle?: string;
@@ -193,18 +195,24 @@ const translations: Record<Lang, Translations> = {
 
       promos: [
         {
+          imageSrc: '/images/promos/year-end-id.png',
+          imageAlt: 'Promo akhir tahun diskon 20% SPT Tahunan Pribadi',
           badge: 'Promo Akhir Tahun',
           title: 'Diskon 20% untuk laporan SPT Tahunan Pribadi.',
           subtitle: 'Berlaku untuk pendaftaran sebelum 31 Desember 2025.',
           href: '#layanan',
         },
         {
+          imageSrc: '/images/promos/year-end-id.png',
+          imageAlt: 'Promo akhir tahun diskon 20% SPT Tahunan Pribadi',
           badge: 'Prioritas UMKM',
           title: 'Paket pajak bulanan khusus UMKM.',
           subtitle: 'Mulai dari Rp 300.000/bulan untuk pengelolaan pajak rutin.',
           href: '#layanan',
         },
         {
+          imageSrc: '/images/promos/year-end-id.png',
+          imageAlt: 'Promo akhir tahun diskon 20% SPT Tahunan Pribadi',
           badge: 'Konsultasi Gratis',
           title: 'Sesi konsultasi awal 30 menit tanpa biaya.',
           subtitle:
@@ -479,12 +487,16 @@ const translations: Record<Lang, Translations> = {
 
       promos: [
         {
+          imageSrc: '/images/promos/year-end-id.png',
+          imageAlt: 'Promo akhir tahun diskon 20% SPT Tahunan Pribadi',
           badge: 'Year-End Promo',
           title: '20% off annual personal tax filing.',
           subtitle: 'Valid for registrations before 31 December 2025.',
           href: '#layanan',
         },
         {
+          imageSrc: '/images/promos/year-end-id.png',
+          imageAlt: 'Promo akhir tahun diskon 20% SPT Tahunan Pribadi',
           badge: 'SME Priority',
           title: 'Monthly tax package for SMEs.',
           subtitle:
@@ -492,6 +504,8 @@ const translations: Record<Lang, Translations> = {
           href: '#layanan',
         },
         {
+          imageSrc: '/images/promos/year-end-id.png',
+          imageAlt: 'Promo akhir tahun diskon 20% SPT Tahunan Pribadi',
           badge: 'Free Consultation',
           title: 'First 30-minute consultation is free.',
           subtitle:
