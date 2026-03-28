@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { buildLangHref } from '@/lib/utils'; 
 import { cn } from '@/lib/utils';
 import type { Lang } from '@/lib/types';
 
@@ -488,7 +489,7 @@ export function TaxConsultWizard({ lang }: Props) {
                     <Button
                       type="button"
                       size="md"
-                      onClick={() => router.push(recommendation.href!)}
+                      onClick={() => router.push(buildLangHref(lang, recommendation.href!))}
                     >
                       {isEn
                         ? 'Open recommended calculator'
