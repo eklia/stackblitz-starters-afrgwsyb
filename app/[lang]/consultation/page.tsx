@@ -385,24 +385,24 @@ export default function ConsultationPage({ params }: PageProps) {
                 </button>
               </div>
 
-              <div className="mb-3 grid grid-cols-7 gap-2">
+              <div className="mb-3 grid grid-cols-7 gap-2 sm:gap-2.5">
                 {weekdayLabels.map((label) => (
                   <div
                     key={label}
-                    className="py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 md:text-xs"
+                    className="py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[11px] md:text-xs"
                   >
                     {label}
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-2 sm:gap-2.5">
                 {calendarCells.map((cell, index) => {
                   if (!cell.date) {
                     return (
                       <div
                         key={`empty-${index}`}
-                        className="aspect-square rounded-2xl border border-transparent bg-transparent"
+                        className="aspect-square rounded-xl border border-transparent bg-transparent sm:rounded-2xl"
                       />
                     );
                   }
@@ -425,7 +425,7 @@ export default function ConsultationPage({ params }: PageProps) {
                       type="button"
                       disabled={disabled}
                       onClick={() => setSelectedDate(dateStr)}
-                      className={`relative aspect-square rounded-2xl border p-2 text-left transition
+                      className={`relative aspect-square min-h-[58px] overflow-hidden rounded-xl border p-1.5 text-left transition sm:min-h-[60px] sm:rounded-2xl sm:p-2
                         ${disabled
                           ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
                           : isSunday
@@ -433,15 +433,15 @@ export default function ConsultationPage({ params }: PageProps) {
                             : isSaturday
                               ? 'border-blue-200 bg-blue-50 text-blue-700'
                               : meta.cellClass}
-                        ${selected ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}
-                        ${today && !selected ? 'ring-1 ring-slate-300' : ''}
-                        ${!disabled && !selected ? 'hover:scale-[1.02] hover:shadow-sm' : ''}
+                        ${selected ? 'border-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.18)]' : ''}
+                        ${today && !selected ? 'border-slate-300' : ''}
+                        ${!disabled && !selected ? 'sm:hover:scale-[1.02] sm:hover:shadow-sm' : ''}
                       `}
                     >
                       <div className="flex h-full flex-col">
                         <div className="flex flex-col">
                           <span
-                            className={`text-sm font-semibold md:text-base ${
+                            className={`text-sm font-semibold leading-none md:text-base ${
                               day?.isAllFull ? 'line-through decoration-1' : ''
                             }`}
                           >
@@ -454,10 +454,12 @@ export default function ConsultationPage({ params }: PageProps) {
                         </div>
 
                         {day ? (
-                          <div className="mt-auto">
-                            <div className="flex items-center justify-between">
-                              <span className={`h-2.5 w-2.5 rounded-full ${meta.dotClass}`} />
-                              <span className="text-[10px] font-semibold">
+                          <div className="mt-auto pt-2">
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                className={`h-2 w-2 rounded-full md:h-2.5 md:w-2.5 ${meta.dotClass}`}
+                              />
+                              <span className="hidden text-[10px] font-semibold leading-none sm:inline md:text-[10px]">
                                 {day.totalRemainingSlots}
                               </span>
                             </div>
